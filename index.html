@@ -32,13 +32,14 @@
         }
         .liquid-button:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.3); }
         .tab-active { background: rgba(255, 255, 255, 0.25); border-bottom: 2px solid white; }
-        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        .hidden { display: none; }
         
-        /* Fix für Minimierung */
-        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 600px; overflow: hidden; }
-        #chat-window.minimized { max-height: 52px; width: 160px; }
-        #chat-content { transition: opacity 0.3s; }
+        /* Fortschrittsring Fix */
+        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        
+        /* Chat Minimierung Fix */
+        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 600px; }
+        #chat-window.minimized { max-height: 52px; width: 180px; overflow: hidden; }
+        #chat-content { transition: opacity 0.2s; }
         .minimized #chat-content { opacity: 0; pointer-events: none; }
         
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
@@ -59,31 +60,34 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
-            <div class="liquid-glass rounded-[2rem] p-6 md:p-8 flex-1 text-center relative z-10 w-full min-h-[400px]">
+            <div class="liquid-glass rounded-[2rem] p-6 md:p-8 flex-1 text-center relative z-10 w-full min-h-[450px]">
                 <div id="section-timer">
-                    <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
-                    <div class="relative inline-flex items-center justify-center mb-6">
-                        <svg class="w-40 h-40 md:w-48 md:h-48">
+                    <h1 class="text-xl font-light mb-12 tracking-widest uppercase text-white/70">Focus Timer</h1>
+                    
+                    <div class="relative w-40 h-40 md:w-48 md:h-48 mx-auto mb-8 flex items-center justify-center">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
                             <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
                             <circle id="progress-ring" class="progress-ring__circle text-white/60" stroke-width="6" stroke-dasharray="439.8" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
                         </svg>
-                        <div id="time-display" class="absolute text-4xl md:text-5xl font-extralight tracking-tighter">05:00</div>
+                        <div id="time-display" class="text-4xl md:text-5xl font-extralight tracking-tighter relative z-10">05:00</div>
                     </div>
-                    <div class="flex justify-center gap-4 mb-6 text-white font-bold text-xl">
-                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none">
+
+                    <div class="flex justify-center gap-4 mb-8 text-white font-bold text-xl">
+                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none focus:border-white">
                         <span class="opacity-30">:</span>
-                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none">
+                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none focus:border-white">
                     </div>
+
                     <div class="flex gap-2">
-                        <button id="start-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px]">Start</button>
-                        <button id="pause-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px] hidden">Pause</button>
-                        <button id="reset-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px]">Reset</button>
+                        <button id="start-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Start</button>
+                        <button id="pause-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px] hidden">Pause</button>
+                        <button id="reset-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Reset</button>
                     </div>
                 </div>
 
                 <div id="section-alarm" class="hidden">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Wecker</h1>
-                    <div class="text-4xl md:text-5xl font-extralight mb-8 mt-10 tracking-widest" id="current-clock">00:00:00</div>
+                    <div class="text-4xl md:text-5xl font-extralight mb-12 mt-10 tracking-widest" id="current-clock">00:00:00</div>
                     <div class="space-y-6">
                         <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white font-bold">
                         <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
@@ -93,7 +97,7 @@
             </div>
 
             <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
-                <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header-click">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header-toggle">
                     <h2 class="text-[10px] font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
                     <span id="min-icon">▼</span>
                 </div>
@@ -105,25 +109,25 @@
         </div>
 
         <div class="flex items-center gap-4 my-8 z-10">
-            <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10" title="Mikrofon Ein/Aus">
+            <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10">
                 <span id="mic-icon" class="text-lg">🎙️</span>
             </button>
             <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[180px] md:min-w-[220px] uppercase tracking-[0.2em] border border-transparent transition-all">
                 <span id="rec-indicator" class="rec-dot hidden"></span>
                 <span id="voice-status-text">Klicke zum Aktivieren</span>
             </button>
-            <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10 text-lg" title="Befehlsübersicht">ⓘ</button>
+            <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10 text-lg">ⓘ</button>
         </div>
 
         <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
             <div class="liquid-glass p-8 rounded-[2rem] max-w-sm w-full border border-white/20">
-                <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70 border-b border-white/10 pb-2">Befehle</h3>
+                <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70 border-b border-white/10 pb-2">Befehlsliste</h3>
                 <ul class="text-xs space-y-4 text-white/80">
                     <li><strong class="text-white block">Wetter:</strong> "Wie ist das Wetter?"</li>
-                    <li><strong class="text-white block">Timer:</strong> "Timer auf 5 Minuten", "Stopp", "Reset"</li>
-                    <li><strong class="text-white block">Sprache:</strong> "Hey Timer" oder Balken klicken.</li>
+                    <li><strong class="text-white block">Timer:</strong> "Timer auf 5 Minuten", "Stopp", "Start", "Reset"</li>
+                    <li><strong class="text-white block">Abbruch:</strong> Klicke den Balken beim Zuhören zum Abbrechen.</li>
                 </ul>
-                <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">OK</button>
+                <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">Schließen</button>
             </div>
         </div>
 
@@ -131,7 +135,7 @@
             <div class="liquid-glass p-12 rounded-[2rem] text-center max-w-xs w-full">
                 <div class="text-6xl mb-4">⏰</div>
                 <h2 id="modal-title" class="text-2xl font-bold mb-6 uppercase tracking-tight">Zeit um!</h2>
-                <button id="close-modal-btn" class="liquid-button w-full py-4 rounded-xl font-bold uppercase">OK</button>
+                <button id="close-modal-btn" class="liquid-button w-full py-4 rounded-xl font-bold">OK</button>
             </div>
         </div>
     </main>
@@ -155,26 +159,24 @@
 
         document.querySelectorAll('button').forEach(el => el.addEventListener('click', playClickSound));
 
-        // TAB NAVIGATION
+        // Navigation
         const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
         const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
         timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
         alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
 
-        // FIX: CHAT MINIMIEREN
-        const chatWin = document.getElementById('chat-window'), chatHeader = document.getElementById('chat-header-click'), minIcon = document.getElementById('min-icon');
-        chatHeader.onclick = () => {
-            playClickSound();
+        // Chat Minimierung
+        const chatWin = document.getElementById('chat-window'), chatToggle = document.getElementById('chat-header-toggle'), minIcon = document.getElementById('min-icon');
+        chatToggle.onclick = () => {
             chatWin.classList.toggle('minimized');
             minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼';
         };
 
-        // INFO MODAL
         const infoBtn = document.getElementById('info-btn'), infoModal = document.getElementById('info-modal'), closeInfo = document.getElementById('close-info-btn');
         infoBtn.onclick = () => infoModal.classList.remove('hidden');
         closeInfo.onclick = () => infoModal.classList.add('hidden');
 
-        // TIMER & ALARM
+        // Timer Logik
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 439.8;
         const workerCode = `setInterval(() => { self.postMessage('t'); }, 100);`;
@@ -192,30 +194,27 @@
             }
         };
 
-        // WETTER & LOGIK
         async function processIntelligence(c, m) {
             c = c.toLowerCase();
             if (c.includes('wetter')) {
-                speak("Ich prüfe das Wetter...", m);
-                if ("geolocation" in navigator) {
+                speak("Ich schaue kurz nach...", m);
+                if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(async (pos) => {
                         try {
                             const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
-                            const data = await res.json();
-                            speak(`Es sind aktuell ${Math.round(data.current_weather.temperature)} Grad.`, m);
-                        } catch (e) { speak("Wetter-Fehler.", m); }
-                    }, () => speak("Standortzugriff fehlt.", m));
+                            const d = await res.json();
+                            speak(`Es sind aktuell ${Math.round(d.current_weather.temperature)} Grad.`, m);
+                        } catch(e) { speak("Fehler beim Wetter.", m); }
+                    }, () => speak("Standortzugriff verweigert.", m));
                 }
             } else if (c.includes('timer') && (c.includes('auf') || c.includes('für'))) {
-                const n = c.match(/\d+/); 
-                if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); speak(`Timer auf ${n[0]} Min.`, m); }
+                const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); speak(`Timer auf ${n[0]} Min.`, m); }
             } else if (c.includes('start')) { startTimer(); speak("Läuft.", m); }
             else if (c.includes('stopp') || c.includes('pause')) { isPaused = true; speak("Pause.", m); }
             else if (c.includes('reset')) { resetTimer(); speak("Reset.", m); }
-            else { speak("Verstanden.", m); }
+            else { speak("Erledigt.", m); }
         }
 
-        // VOICE LOGIK
         let recognition = null, voiceActive = false, voiceListening = false, micEnabled = true;
         const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), recI = document.getElementById('rec-indicator'), mI = document.getElementById('mic-icon');
 
@@ -230,15 +229,12 @@
             recognition.onend = () => { if(voiceListening && micEnabled) recognition.start(); };
         }
 
-        function activateVoice() { 
-            voiceActive = true; vBox.classList.add('listening-active'); vText.textContent = 'Höre zu...'; 
-            recI.classList.remove('hidden'); speak("Ja?", 'voice'); requestWakeLock(); 
-        }
+        function activateVoice() { voiceActive = true; vBox.classList.add('listening-active'); vText.textContent = 'Höre zu...'; recI.classList.remove('hidden'); speak("Ja?", 'voice'); requestWakeLock(); }
         function deactivateVoice() { voiceActive = false; vBox.classList.remove('listening-active'); vText.textContent = 'Bereit für "Hey Timer"'; recI.classList.add('hidden'); }
 
         vBox.onclick = () => {
             if (!voiceListening) { voiceListening = true; recognition.start(); vText.textContent = 'Bereit für "Hey Timer"'; requestWakeLock(); return; }
-            if (voiceActive) { deactivateVoice(); window.speechSynthesis.cancel(); } else { activateVoice(); }
+            voiceActive ? (deactivateVoice(), window.speechSynthesis.cancel()) : activateVoice();
         };
 
         document.getElementById('mic-toggle-btn').onclick = () => {
