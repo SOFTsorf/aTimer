@@ -8,26 +8,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Outfit', sans-serif; box-sizing: border-box; }
-        body { overflow-y: auto; background: #0f172a; color: white; margin: 0; }
-        .sideline-brand { position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; font-size: 14px; letter-spacing: 0.5em; text-transform: uppercase; opacity: 0.3; white-space: nowrap; pointer-events: none; z-index: 50; }
-        .liquid-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-        .liquid-button { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.2s ease; }
+        body { overflow-y: auto; background: #0f172a; color: white; margin: 0; padding-bottom: 120px; }
+        .sideline-brand { position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; font-size: 14px; letter-spacing: 0.5em; text-transform: uppercase; opacity: 0.3; white-space: nowrap; pointer-events: none; z-index: 40; }
+        
+        /* Glass Morphism */
+        .liquid-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+        .liquid-button { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.2s ease; }
         .liquid-button:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.2); }
+        
+        /* Fixed Footer Bar */
+        .control-footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 100; display: flex; justify-content: center; align-items: center; gap: 15px; }
+
         .tab-active { background: rgba(255, 255, 255, 0.2); border-bottom: 2px solid white; }
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 600px; }
-        #chat-window.minimized { max-height: 52px; width: 180px; overflow: hidden; }
+        
+        /* Chat Toggle States */
+        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 500px; overflow: hidden; }
+        #chat-window.minimized { max-height: 52px; }
+        .minimized #chat-content { display: none; }
+        
         .history-item { cursor: pointer; transition: background 0.2s; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .history-item:hover { background: rgba(255, 255, 255, 0.1); }
+        
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .rec-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse-red 1s infinite; }
     </style>
 </head>
 <body class="min-h-full w-full text-sm">
     <div class="sideline-brand">AI Pro Timer</div>
-    <main class="relative min-h-screen w-full flex flex-col items-center p-4 md:justify-center bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
+    
+    <main class="relative min-h-screen w-full flex flex-col items-center p-4 pt-8 bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
         
-        <div class="flex gap-4 mb-4 mt-4 z-20">
+        <div class="flex gap-4 mb-4 z-20">
             <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px] tab-active">Timer</button>
             <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px]">Wecker</button>
         </div>
@@ -72,10 +84,10 @@
                 </div>
             </div>
 
-            <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
+            <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10 minimized">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header-toggle">
                     <h2 class="text-[10px] font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
-                    <span id="min-icon">▼</span>
+                    <span id="min-icon">▲</span>
                 </div>
                 <div id="chat-content">
                     <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64"></div>
@@ -83,37 +95,38 @@
                 </div>
             </div>
         </div>
-
-        <div class="flex items-center gap-4 my-8 z-10">
-            <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10"><span id="mic-icon" class="text-lg">🎙️</span></button>
-            <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[180px] md:min-w-[220px] uppercase tracking-[0.2em] transition-all">
-                <span id="rec-indicator" class="rec-dot hidden"></span>
-                <span id="voice-status-text">Klicke zum Aktivieren</span>
-            </button>
-            <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10 text-lg">ⓘ</button>
-        </div>
-
-        <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-            <div class="liquid-glass p-8 rounded-[2rem] max-w-sm w-full border border-white/20">
-                <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70 border-b border-white/10 pb-2">Befehle</h3>
-                <ul class="text-xs space-y-3 text-white/80">
-                    <li><strong class="text-white block">Wetter:</strong> "Wie ist das Wetter?" (PLZ nötig)</li>
-                    <li><strong class="text-white block">Timer:</strong> "Timer auf 10 Minuten", "Stopp", "Reset"</li>
-                    <li><strong class="text-white block">PLZ:</strong> Tippe einfach 5 Zahlen (z.B. 10115)</li>
-                    <li><strong class="text-white block">Verlauf:</strong> Klicke einen alten Timer zum Laden</li>
-                </ul>
-                <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">Schließen</button>
-            </div>
-        </div>
     </main>
+
+    <footer class="control-footer">
+        <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10"><span id="mic-icon" class="text-lg">🎙️</span></button>
+        <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[150px] md:min-w-[220px] uppercase tracking-[0.2em] transition-all">
+            <span id="rec-indicator" class="rec-dot hidden"></span>
+            <span id="voice-status-text">Bereit</span>
+        </button>
+        <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10 text-lg">ⓘ</button>
+    </footer>
+
+    <div id="info-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+        <div class="liquid-glass p-8 rounded-[2rem] max-w-sm w-full border border-white/20">
+            <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70 border-b border-white/10 pb-2">Befehle</h3>
+            <ul class="text-xs space-y-3 text-white/80">
+                <li><strong class="text-white block">Wetter:</strong> "Wie ist das Wetter?"</li>
+                <li><strong class="text-white block">Timer:</strong> "Timer auf 10 Minuten"</li>
+                <li><strong class="text-white block">PLZ:</strong> Tippe einfach 5 Zahlen (z.B. 10115)</li>
+                <li><strong class="text-white block">Verlauf:</strong> Klicke einen Eintrag zum Laden</li>
+            </ul>
+            <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">Schließen</button>
+        </div>
+    </div>
 
     <script>
         let userZip = localStorage.getItem('user_zip') || null;
         let timerHistory = JSON.parse(localStorage.getItem('timer_history')) || [];
 
+        // History UI
         function renderHistory() {
             const list = document.getElementById('timer-history-list');
-            list.innerHTML = timerHistory.map((item, idx) => `
+            list.innerHTML = timerHistory.map(item => `
                 <div class="history-item flex justify-between items-center p-3 rounded-xl text-[11px]" onclick="loadHistoryTimer(${item.minutes})">
                     <span class="text-white/80 font-medium">${item.minutes} Min Timer</span>
                     <span class="text-white/30 text-[9px]">${item.date} Uhr</span>
@@ -125,7 +138,6 @@
             document.getElementById('minutes-input').value = m;
             document.getElementById('seconds-input').value = 0;
             resetTimer();
-            speak(`Timer auf ${m} Minuten gesetzt.`, 'chat');
         }
 
         function saveHistory(m) {
@@ -135,6 +147,15 @@
             renderHistory();
         }
 
+        // Chat Toggle
+        document.getElementById('chat-header-toggle').onclick = () => {
+            const win = document.getElementById('chat-window');
+            const icon = document.getElementById('min-icon');
+            win.classList.toggle('minimized');
+            icon.textContent = win.classList.contains('minimized') ? '▲' : '▼';
+        };
+
+        // Weather
         async function getWeather(zip, m) {
             try {
                 const geo = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${zip}&country=germany&format=json`);
@@ -145,19 +166,20 @@
                     userZip = zip; localStorage.setItem('user_zip', zip);
                     speak(`In ${zip} sind es ${Math.round(wData.current_weather.temperature)} Grad.`, m);
                 }
-            } catch (e) { speak("Fehler beim Wetter.", m); }
+            } catch (e) { speak("Wetter-Fehler.", m); }
         }
 
         async function processIntelligence(c, m) {
             c = c.trim().toLowerCase();
             if (/^\d{5}$/.test(c)) { await getWeather(c, m); return; }
-            if (c.includes('wetter')) { if(userZip) await getWeather(userZip, m); else speak("Gib bitte deine PLZ ein.", m); }
+            if (c.includes('wetter')) { if(userZip) await getWeather(userZip, m); else speak("PLZ eingeben.", m); }
             else if (c.includes('timer')) { const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); } }
             else if (c.includes('start')) startTimer();
             else if (c.includes('stopp')) isPaused = true;
             else if (c.includes('reset')) resetTimer();
         }
 
+        // Timer Core
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circ = 439.8;
         const worker = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>self.postMessage('t'),100)`], {type:'text/javascript'})));
@@ -169,7 +191,7 @@
                 if (totalSeconds <= 0) { 
                     isRunning = false; 
                     saveHistory(Math.round(initialSeconds/60));
-                    speak("Zeit abgelaufen!", "voice"); 
+                    speak("Zeit um!", "voice"); 
                     resetTimer();
                 } else {
                     const min = Math.floor(totalSeconds / 60).toString().padStart(2, '0'), sec = (totalSeconds % 60).toString().padStart(2, '0');
@@ -182,22 +204,33 @@
         function startTimer() {
             const m = parseInt(document.getElementById('minutes-input').value) || 0;
             const s = parseInt(document.getElementById('seconds-input').value) || 0;
-            totalSeconds = m * 60 + s;
-            if (totalSeconds <= 0) return;
+            totalSeconds = m * 60 + s; if (totalSeconds <= 0) return;
             initialSeconds = totalSeconds; isRunning = true; isPaused = false; endTime = Date.now() + totalSeconds * 1000;
             document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden');
         }
 
         function resetTimer() { isRunning = false; timeDisplay.textContent = "00:00"; ring.style.strokeDashoffset = 0; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
 
+        // Event Listeners
         document.getElementById('info-btn').onclick = () => document.getElementById('info-modal').classList.remove('hidden');
         document.getElementById('close-info-btn').onclick = () => document.getElementById('info-modal').classList.add('hidden');
         document.getElementById('chat-input').onkeypress = (e) => { if (e.key === 'Enter') { addChat("Du", e.target.value); processIntelligence(e.target.value, 'chat'); e.target.value = ''; } };
         document.getElementById('start-btn').onclick = startTimer;
         document.getElementById('reset-btn').onclick = resetTimer;
         document.getElementById('clear-history').onclick = () => { timerHistory = []; localStorage.setItem('timer_history', '[]'); renderHistory(); };
-        document.getElementById('tab-timer-btn').onclick = () => { document.getElementById('section-timer').classList.remove('hidden'); document.getElementById('section-alarm').classList.add('hidden'); };
-        document.getElementById('tab-alarm-btn').onclick = () => { document.getElementById('section-alarm').classList.remove('hidden'); document.getElementById('section-timer').classList.add('hidden'); };
+        
+        document.getElementById('tab-timer-btn').onclick = () => { 
+            document.getElementById('section-timer').classList.remove('hidden'); 
+            document.getElementById('section-alarm').classList.add('hidden'); 
+            document.getElementById('tab-timer-btn').classList.add('tab-active');
+            document.getElementById('tab-alarm-btn').classList.remove('tab-active');
+        };
+        document.getElementById('tab-alarm-btn').onclick = () => { 
+            document.getElementById('section-alarm').classList.remove('hidden'); 
+            document.getElementById('section-timer').classList.add('hidden'); 
+            document.getElementById('tab-alarm-btn').classList.add('tab-active');
+            document.getElementById('tab-timer-btn').classList.remove('tab-active');
+        };
 
         function addChat(s, t) { const h = document.getElementById('chat-history'); h.innerHTML += `<div class="mb-1"><span class="opacity-20 uppercase text-[9px]">${s}:</span> <div class="text-white/80">${t}</div></div>`; h.scrollTop = h.scrollHeight; }
         function speak(t, m) { addChat("AI", t); if (m === 'voice') { const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; window.speechSynthesis.speak(u); } }
