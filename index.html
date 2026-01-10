@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Pro Timer - Patrick Roth Edition</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e1e38">
-    <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Outfit', sans-serif; box-sizing: border-box; }
-        body { overflow-y: auto; -webkit-overflow-scrolling: touch; background: #0f172a; color: white; margin: 0; }
+        body { 
+            background: #0f172a; color: white; margin: 0; 
+            padding-bottom: 120px; /* Platz für den fixierten Footer */
+        }
         
         .sideline-brand {
             position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg);
@@ -20,235 +20,205 @@
         }
 
         .liquid-glass {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
+
+        /* FIXIERTER FOOTER */
+        .fixed-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex; justify-content: center; align-items: center; gap: 12px;
+            z-index: 100;
+        }
+
         .liquid-button {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.2s ease;
         }
-        .liquid-button:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.3); }
-        .tab-active { background: rgba(255, 255, 255, 0.25); border-bottom: 2px solid white; }
-        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        .hidden { display: none; }
-        
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        .rec-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse-red 1s infinite; }
-        .listening-active { border-color: #4ade80 !important; background: rgba(74, 222, 128, 0.1) !important; }
 
-        @media (max-width: 600px) { .sideline-brand { left: 5px; font-size: 10px; } }
+        /* Mikrofon Strich Logic */
+        #mic-slash { display: none; stroke: #ef4444; stroke-width: 2; }
+        .mic-muted #mic-slash { display: block; }
+        .mic-muted #mic-main { opacity: 0.3; }
+
+        .listening-active { 
+            border-color: #4ade80 !important; 
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+            background: rgba(74, 222, 128, 0.1) !important; 
+        }
+
+        .tab-active { background: rgba(255, 255, 255, 0.2); border-bottom: 2px solid white; }
+        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        
+        #chat-window.minimized { max-height: 52px; overflow: hidden; }
     </style>
 </head>
 <body class="min-h-full w-full text-sm">
     <div class="sideline-brand">Patrick Roth</div>
 
-    <main class="relative min-h-screen w-full flex flex-col items-center p-4 md:justify-center bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
+    <main class="relative min-h-screen w-full flex flex-col items-center p-4 pt-8 bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
         
-        <div class="flex gap-4 mb-4 mt-4 z-20">
+        <div class="flex gap-4 mb-4 z-20">
             <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px] tab-active">Timer</button>
             <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px]">Wecker</button>
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
-            <div class="liquid-glass rounded-[2rem] p-6 md:p-8 flex-1 text-center relative z-10 w-full min-h-[400px]">
+            <div class="liquid-glass rounded-[2rem] p-6 flex-1 text-center w-full">
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
                     <div class="relative inline-flex items-center justify-center mb-6">
-                        <svg class="w-40 h-40 md:w-48 md:h-48">
+                        <svg class="w-40 h-40">
                             <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
                             <circle id="progress-ring" class="progress-ring__circle text-white/60" stroke-width="6" stroke-dasharray="439.8" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
                         </svg>
-                        <div id="time-display" class="absolute text-4xl md:text-5xl font-extralight tracking-tighter">05:00</div>
+                        <div id="time-display" class="absolute text-4xl font-extralight tracking-tighter">05:00</div>
                     </div>
-                    <div class="flex justify-center gap-4 mb-6 text-white font-bold text-xl">
-                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none">
+                    <div class="flex justify-center gap-4 mb-6">
+                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/20 text-center outline-none">
                         <span class="opacity-30">:</span>
-                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none">
+                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/20 text-center outline-none">
                     </div>
                     <div class="flex gap-2">
                         <button id="start-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px]">Start</button>
-                        <button id="pause-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px] hidden">Pause</button>
                         <button id="reset-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px]">Reset</button>
                     </div>
                 </div>
 
                 <div id="section-alarm" class="hidden">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Wecker</h1>
-                    <div class="text-4xl md:text-5xl font-extralight mb-8 mt-10 tracking-widest" id="current-clock">00:00:00</div>
-                    <div class="space-y-6">
-                        <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white font-bold">
-                        <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
-                        <div id="active-alarm-info" class="text-xs text-green-400 font-medium hidden">🔔 Aktiv um <span id="info-time">00:00</span></div>
-                    </div>
+                    <div class="text-4xl mb-8 mt-10 tracking-widest" id="current-clock">00:00:00</div>
+                    <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white font-bold mb-4">
+                    <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
                 </div>
             </div>
 
-            <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
+            <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col border border-white/10">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header">
                     <h2 class="text-[10px] font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
                     <span id="min-icon">▼</span>
                 </div>
                 <div id="chat-content">
-                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64 min-h-[100px]"></div>
-                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none focus:border-white/30 transition-all">
+                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64"></div>
+                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none">
                 </div>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-4 my-8 z-10">
-            <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10" title="Mikrofon an/aus">
-                <span id="mic-icon" class="text-lg">🎙️</span>
-            </button>
-            
-            <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[180px] md:min-w-[220px] uppercase tracking-[0.2em] border border-transparent transition-all">
-                <span id="rec-indicator" class="rec-dot hidden"></span>
-                <span id="voice-status-text">Klicke zum Aktivieren</span>
-            </button>
-
-            <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10 text-lg" title="Befehlsliste">ⓘ</button>
-        </div>
-
-        <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-            <div class="liquid-glass p-8 rounded-[2rem] max-w-sm w-full border border-white/20">
-                <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70 border-b border-white/10 pb-2">Befehlsliste</h3>
-                <ul class="text-xs space-y-4 text-white/80">
-                    <li><strong class="text-white block">Timer:</strong> "Timer auf 5 Minuten", "Stopp", "Start", "Reset"</li>
-                    <li><strong class="text-white block">Wetter:</strong> "Wie ist das Wetter?"</li>
-                    <li><strong class="text-white block">Aktivierung:</strong> Sage "Hey Timer" oder klicke den Balken.</li>
-                    <li><strong class="text-white block">Abbruch:</strong> Klicke den Balken während die KI zuhört.</li>
-                </ul>
-                <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">Schließen</button>
-            </div>
-        </div>
-
-        <div id="complete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-            <div class="liquid-glass p-12 rounded-[2rem] text-center max-w-xs w-full">
-                <div class="text-6xl mb-4">⏰</div>
-                <h2 id="modal-title" class="text-2xl font-bold mb-6 uppercase tracking-tight">Zeit um!</h2>
-                <button id="close-modal-btn" class="liquid-button w-full py-4 rounded-xl font-bold">OK</button>
             </div>
         </div>
     </main>
 
+    <footer class="fixed-footer">
+        <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full flex items-center justify-center border-white/10" title="Mikrofon an/aus">
+            <svg id="mic-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <g id="mic-main">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </g>
+                <line id="mic-slash" x1="2" y1="2" x2="22" y2="22"></line>
+            </svg>
+        </button>
+        
+        <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[200px] md:min-w-[260px] uppercase tracking-[0.2em] font-bold transition-all">
+            <span id="voice-status-text">Sag "Hey Timer"</span>
+        </button>
+
+        <button id="info-btn" class="liquid-button p-4 rounded-full flex items-center justify-center border-white/10 text-lg">ⓘ</button>
+    </footer>
+
+    <div id="info-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+        <div class="liquid-glass p-8 rounded-[2rem] max-w-sm w-full">
+            <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70">Befehle</h3>
+            <ul class="text-xs space-y-4 text-white/80">
+                <li><strong class="text-white block">Timer:</strong> "Timer auf 5 Minuten"</li>
+                <li><strong class="text-white block">Aktivierung:</strong> Sage "Hey Timer"</li>
+                <li><strong class="text-white block">Stopp:</strong> Klicke den Balken zum Abbrechen</li>
+            </ul>
+            <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">Schließen</button>
+        </div>
+    </div>
+
     <script>
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
-            catch (err) { console.log(err); }
-        }
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playClickSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(850, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        }
-
-        document.querySelectorAll('button, #chat-header').forEach(el => el.addEventListener('click', playClickSound));
-
-        // UI Logik
+        // Logik für Tabs, Timer, Sprache etc.
         const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
         const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
         timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
         alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
-
-        const chatWin = document.getElementById('chat-window'), minBtn = document.getElementById('chat-header');
-        minBtn.onclick = () => { chatWin.classList.toggle('minimized'); document.getElementById('min-icon').textContent = chatWin.classList.contains('minimized') ? '▲' : '▼'; };
 
         // Modal Logik
         const infoBtn = document.getElementById('info-btn'), infoModal = document.getElementById('info-modal'), closeInfo = document.getElementById('close-info-btn');
         infoBtn.onclick = () => infoModal.classList.remove('hidden');
         closeInfo.onclick = () => infoModal.classList.add('hidden');
 
-        // Zeit Logik
-        let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
-        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 439.8;
-        const workerCode = `setInterval(() => { self.postMessage('t'); }, 100);`;
-        const worker = new Worker(URL.createObjectURL(new Blob([workerCode], {type: 'application/javascript'})));
-
-        worker.onmessage = () => {
-            const now = new Date();
-            const curT = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('current-clock').textContent = now.toTimeString().split(' ')[0];
-            if (activeAlarmTime === curT) { triggerAlarm("Wecker!"); activeAlarmTime = null; document.getElementById('active-alarm-info').classList.add('hidden'); }
-            if (isRunning && !isPaused) {
-                totalSeconds = Math.round((endTime - Date.now()) / 1000);
-                if (totalSeconds <= 0) triggerAlarm("Timer!");
-                else updateDisplay(totalSeconds);
-            }
-        };
-
-        // Sprachsteuerung
-        let recognition = null, voiceActive = false, voiceListening = false, micEnabled = true;
-        const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), recI = document.getElementById('rec-indicator'), mI = document.getElementById('mic-icon');
+        // Spracherkennung
+        let recognition = null, voiceActive = false, micEnabled = true;
+        const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), mBtn = document.getElementById('mic-toggle-btn');
 
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.lang = 'de-DE';
             recognition.onresult = (e) => {
                 if (!micEnabled) return;
                 const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
-                if (!voiceActive && (t.includes('hey timer') || t.includes('hei timer'))) { activateVoice(); }
-                else if (voiceActive) { addChat("Du", t); procInt(t, 'voice'); deactivateVoice(); }
+                if (!voiceActive && t.includes('hey timer')) { activateVoice(); }
+                else if (voiceActive) { procInt(t, 'voice'); deactivateVoice(); }
             };
-            recognition.onend = () => { if(voiceListening && micEnabled) recognition.start(); };
+            recognition.start();
         }
 
-        function activateVoice() { voiceActive = true; vBox.classList.add('listening-active'); vText.textContent = 'Höre zu...'; recI.classList.remove('hidden'); speak("Ja?", 'voice'); requestWakeLock(); }
-        function deactivateVoice() { voiceActive = false; vBox.classList.remove('listening-active'); vText.textContent = 'Bereit für "Hey Timer"'; recI.classList.add('hidden'); }
+        function activateVoice() { 
+            voiceActive = true; 
+            vBox.classList.add('listening-active'); 
+            vText.textContent = 'Höre zu...'; 
+            const u = new SpeechSynthesisUtterance("Ja?"); u.lang = 'de-DE'; window.speechSynthesis.speak(u);
+        }
+        function deactivateVoice() { 
+            voiceActive = false; 
+            vBox.classList.remove('listening-active'); 
+            vText.textContent = micEnabled ? 'Sag "Hey Timer"' : 'Mikrofon aus'; 
+        }
 
-        vBox.onclick = () => {
-            if (!voiceListening) { voiceListening = true; recognition.start(); vText.textContent = 'Bereit für "Hey Timer"'; requestWakeLock(); return; }
-            if (!micEnabled) return;
-            voiceActive ? (deactivateVoice(), window.speechSynthesis.cancel()) : activateVoice();
-        };
+        vBox.onclick = () => voiceActive ? (deactivateVoice(), window.speechSynthesis.cancel()) : activateVoice();
 
-        document.getElementById('mic-toggle-btn').onclick = () => {
+        mBtn.onclick = () => {
             micEnabled = !micEnabled;
-            if (micEnabled) { mI.textContent = '🎙️'; vText.textContent = 'Bereit für "Hey Timer"'; if(!voiceListening) { voiceListening = true; recognition.start(); } else { try{recognition.start();}catch(e){} } } 
-            else { mI.textContent = '🚫'; vText.textContent = 'Mikrofon aus'; recognition.stop(); deactivateVoice(); }
+            mBtn.classList.toggle('mic-muted', !micEnabled);
+            deactivateVoice();
+            if (!micEnabled) recognition.stop(); else recognition.start();
         };
 
-        function addChat(s, t) { const d = document.createElement('div'); d.innerHTML = `<span class="text-[9px] font-bold text-white/20 uppercase">${s}:</span> <div class="text-white/80">${t}</div>`; const h = document.getElementById('chat-history'); h.appendChild(d); h.scrollTop = h.scrollHeight; }
-        function speak(t, m) { addChat("AI", t); if (m === 'voice') { const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; window.speechSynthesis.speak(u); } }
-
-        async function procInt(c, m) {
-            if (c.includes('timer') && (c.includes('auf') || c.includes('für'))) {
-                const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); speak(`Timer auf ${n[0]} Min.`, m); }
-            } else if (c.includes('start')) { startTimer(); speak("OK.", m); }
-            else if (c.includes('stopp') || c.includes('pause')) { isPaused = true; speak("Pausiert.", m); }
-            else if (c.includes('wetter')) { speak("Heute ist es angenehm.", m); }
-            else { speak("Erledigt.", m); }
-        }
-
-        function updateDisplay(s) {
-            const min = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0');
-            timeDisplay.textContent = `${min}:${sec}`;
-            ring.style.strokeDashoffset = circumference - ((s / (initialSeconds || 1)) * circumference);
-        }
-
-        function triggerAlarm(t) { isRunning = false; document.getElementById('modal-title').textContent = t; document.getElementById('complete-modal').classList.remove('hidden'); speak(t === "Wecker!" ? "Aufstehen!" : "Zeit um!", 'voice'); }
+        // Timer Logik (Kurzfassung)
+        let totalSeconds = 0, initialSeconds = 0, isRunning = false, endTime = 0;
         function startTimer() {
-            totalSeconds = (parseInt(document.getElementById('minutes-input').value) || 0) * 60 + (parseInt(document.getElementById('seconds-input').value) || 0);
-            if (totalSeconds <= 0) return;
-            initialSeconds = totalSeconds; isRunning = true; isPaused = false; endTime = Date.now() + totalSeconds * 1000;
-            document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden'); requestWakeLock();
+            totalSeconds = (parseInt(document.getElementById('minutes-input').value) || 0) * 60;
+            initialSeconds = totalSeconds; isRunning = true; endTime = Date.now() + totalSeconds * 1000;
         }
+        setInterval(() => {
+            if (isRunning) {
+                let s = Math.round((endTime - Date.now()) / 1000);
+                if (s <= 0) { isRunning = false; document.getElementById('time-display').textContent = "00:00"; }
+                else {
+                    let m = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0');
+                    document.getElementById('time-display').textContent = `${m}:${sec}`;
+                    document.getElementById('progress-ring').style.strokeDashoffset = 439.8 - ((s / initialSeconds) * 439.8);
+                }
+            }
+            document.getElementById('current-clock').textContent = new Date().toTimeString().split(' ')[0];
+        }, 1000);
 
-        document.getElementById('chat-input').onkeypress = (e) => { if (e.key === 'Enter') { const v = e.target.value; if(!v) return; addChat("Ich", v); procInt(v, 'chat'); e.target.value = ''; } };
-        document.getElementById('set-alarm-btn').onclick = () => { const t = document.getElementById('alarm-time').value; if(t) { activeAlarmTime = t; document.getElementById('info-time').textContent = t; document.getElementById('active-alarm-info').classList.remove('hidden'); speak("Wecker aktiv.", "chat"); requestWakeLock(); } };
+        function procInt(c, m) {
+            if (c.includes('timer auf')) {
+                const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); }
+            }
+        }
         document.getElementById('start-btn').onclick = startTimer;
-        document.getElementById('pause-btn').onclick = () => { isPaused = true; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
-        document.getElementById('reset-btn').onclick = () => { isRunning = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
-        document.getElementById('close-modal-btn').onclick = () => document.getElementById('complete-modal').classList.add('hidden');
+        document.getElementById('reset-btn').onclick = () => { isRunning = false; document.getElementById('progress-ring').style.strokeDashoffset = 0; };
     </script>
 </body>
 </html>
