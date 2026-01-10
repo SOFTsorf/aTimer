@@ -1,0 +1,15 @@
+{
+  "name": "AI Pro Timer",
+  "short_name": "TimerApp",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e1e38",
+  "icons": [
+    {
+      "src": "https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
