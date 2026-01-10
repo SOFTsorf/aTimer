@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Voice & Chat Timer</title>
+    <title>AI Hybrid Timer</title>
     <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -37,7 +37,6 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-stretch">
-            
             <div id="section-container" class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10">
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
@@ -76,12 +75,11 @@
                 </div>
                 <div class="relative">
                     <input type="text" id="chat-input" placeholder="Befehl tippen..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
-                    <button id="send-btn" class="absolute right-2 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100">⏎</button>
                 </div>
             </div>
         </div>
 
-        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10 transition-all">
+        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10">
             <span id="voice-status-text">Klicke zum Aktivieren</span>
         </div>
 
@@ -107,14 +105,13 @@
             source.connect(audioCtx.destination); source.start();
         }
 
-        // Navigation
         const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
         const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
         timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
         alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
 
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
-        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 90 * 2 * Math.PI;
+        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 565.48;
 
         function addChatMessage(sender, text) {
             const div = document.createElement('div');
@@ -142,37 +139,43 @@
             ring.style.strokeDashoffset = circumference - ((s / initialSeconds) * circumference);
         }
 
-        let recognition = null, voiceActive = false, voiceListening = false;
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'de-DE';
-            window.speechSynthesis.speak(utterance);
+        function speak(text, mode) {
             addChatMessage("Bot", text);
+            // Nur sprechen, wenn der Modus 'voice' ist
+            if (mode === 'voice') {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'de-DE';
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
-        async function processIntelligence(cmd) {
+        async function processIntelligence(cmd, mode) {
             cmd = cmd.toLowerCase();
             if (cmd.includes('wetter')) {
-                speak("Einen Moment...");
                 try {
                     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true');
                     const data = await res.json();
-                    speak(`Aktuell sind es ${Math.round(data.current_weather.temperature)} Grad.`);
-                } catch (e) { speak("Wetterdaten nicht verfügbar."); }
+                    speak(`Aktuell sind es ${Math.round(data.current_weather.temperature)} Grad.`, mode);
+                } catch (e) { speak("Wetterdaten nicht verfügbar.", mode); }
             }
-            else if (cmd.includes('uhrzeit')) {
-                speak(`Es ist jetzt ${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr.`);
+            else if (cmd.includes('uhrzeit') || cmd.includes('wie spät')) {
+                speak(`Es ist jetzt ${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr.`, mode);
             }
             else if (cmd.includes('timer') && (cmd.includes('auf') || cmd.includes('für'))) {
                 const num = cmd.match(/\d+/);
-                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Minuten gestellt.`); }
+                if(num) { 
+                    document.getElementById('minutes-input').value = num[0]; 
+                    startTimer(); 
+                    speak(`Timer auf ${num[0]} Minuten gestellt.`, mode); 
+                }
             }
-            else if (cmd.includes('start')) { startTimer(); speak("Timer gestartet."); }
-            else if (cmd.includes('stopp') || cmd.includes('pause')) { pauseTimer(); speak("Pausiert."); }
-            else if (cmd.includes('reset')) { resetTimer(); speak("Alles auf Null."); }
-            else { speak("Ich habe dich verstanden."); }
+            else if (cmd.includes('start')) { startTimer(); speak("Timer gestartet.", mode); }
+            else if (cmd.includes('stopp') || cmd.includes('pause')) { pauseTimer(); speak("Pausiert.", mode); }
+            else if (cmd.includes('reset')) { resetTimer(); speak("Alles auf Null.", mode); }
+            else { speak("Befehl ausgeführt.", mode); }
         }
 
+        let recognition = null, voiceActive = false, voiceListening = false;
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.continuous = true;
@@ -182,10 +185,10 @@
                 if (!voiceActive && transcript.toLowerCase().includes('timer')) {
                     voiceActive = true; 
                     document.getElementById('voice-status-box').style.background = 'rgba(100,255,100,0.3)';
-                    speak("Ja?"); 
+                    speak("Ja?", 'voice'); 
                 } else if (voiceActive) {
                     addChatMessage("Du (Voice)", transcript);
-                    processIntelligence(transcript);
+                    processIntelligence(transcript, 'voice');
                     voiceActive = false;
                     document.getElementById('voice-status-box').style.background = '';
                 }
@@ -193,13 +196,12 @@
             recognition.onend = () => { if(voiceListening) recognition.start(); };
         }
 
-        // Chat Input Event
         document.getElementById('chat-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 const val = e.target.value;
                 if(!val) return;
                 addChatMessage("Du (Chat)", val);
-                processIntelligence(val);
+                processIntelligence(val, 'chat'); // Modus 'chat' -> kein Audio
                 e.target.value = '';
             }
         });
@@ -207,7 +209,7 @@
         function triggerAlarm(title) {
             isRunning = false; document.getElementById('modal-title').textContent = title;
             document.getElementById('complete-modal').classList.remove('hidden');
-            speak(title === "Wecker!" ? "Aufstehen!" : "Zeit abgelaufen!");
+            speak(title === "Wecker!" ? "Aufstehen!" : "Zeit abgelaufen!", 'voice'); // Alarme sprechen immer
         }
 
         function startTimer() {
