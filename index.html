@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Pro Timer</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e38">
+    
     <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -24,10 +27,6 @@
         .tab-active { background: rgba(255, 255, 255, 0.25); border-bottom: 2px solid white; }
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
         .hidden { display: none; }
-        #chat-history::-webkit-scrollbar { width: 4px; }
-        #chat-history::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        
-        /* Chat Minimierung Animation */
         #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 500px; }
         #chat-window.minimized { max-height: 48px; width: 150px; overflow: hidden; }
     </style>
@@ -41,7 +40,6 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
-            
             <div class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10 w-full">
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
@@ -75,14 +73,10 @@
             <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header">
                     <h2 class="text-xs font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
-                    <button id="minimize-btn" class="text-white/30 hover:text-white">
-                        <span id="min-icon">▼</span>
-                    </button>
+                    <span id="min-icon">▼</span>
                 </div>
                 <div id="chat-content" class="flex flex-col h-full">
-                    <div id="chat-history" class="flex-1 overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64 min-h-[150px]">
-                        <div class="text-white/40 italic text-[10px]">System bereit...</div>
-                    </div>
+                    <div id="chat-history" class="flex-1 overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64 min-h-[150px]"></div>
                     <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
                 </div>
             </div>
@@ -102,51 +96,29 @@
     </main>
 
     <script>
+        // PWA SERVICE WORKER REGISTRIERUNG
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript;base64,' + btoa('self.addEventListener("fetch", (e) => {});'));
+        }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // --- SOUND GENERATOR ---
         function playClickSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine';
             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
-        // Globaler Sound-Listener für alle Buttons
-        document.querySelectorAll('button, .cursor-pointer').forEach(btn => {
-            btn.addEventListener('click', playClickSound);
-        });
+        document.querySelectorAll('button, .cursor-pointer').forEach(btn => btn.addEventListener('click', playClickSound));
 
-        // --- NAVIGATION & CHAT MINIMIZE ---
-        const chatWin = document.getElementById('chat-window');
-        const minBtn = document.getElementById('chat-header');
-        const minIcon = document.getElementById('min-icon');
+        const chatWin = document.getElementById('chat-window'), minBtn = document.getElementById('chat-header'), minIcon = document.getElementById('min-icon');
+        minBtn.onclick = () => { chatWin.classList.toggle('minimized'); minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼'; };
 
-        minBtn.onclick = () => {
-            chatWin.classList.toggle('minimized');
-            minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼';
-        };
-
-        const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
-        const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
-        timerBtn.onclick = () => { 
-            timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); 
-            timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active');
-        };
-        alarmBtn.onclick = () => { 
-            alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); 
-            alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active');
-        };
-
-        // --- TIMER LOGIK ---
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 565.48;
 
@@ -171,21 +143,16 @@
             ring.style.strokeDashoffset = circumference - ((s / initialSeconds) * circumference);
         }
 
-        // --- SPRACHE & INTELLIGENZ ---
         function addChatMessage(sender, text) {
             const div = document.createElement('div');
             div.innerHTML = `<span class="text-[10px] font-bold text-white/20 uppercase">${sender}:</span> <div class="text-white/80">${text}</div>`;
-            const history = document.getElementById('chat-history');
-            history.appendChild(div);
-            history.scrollTop = history.scrollHeight;
+            const h = document.getElementById('chat-history'); h.appendChild(div); h.scrollTop = h.scrollHeight;
         }
 
         function speak(text, mode) {
             addChatMessage("AI", text);
             if (mode === 'voice') {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'de-DE';
-                window.speechSynthesis.speak(utterance);
+                const u = new SpeechSynthesisUtterance(text); u.lang = 'de-DE'; window.speechSynthesis.speak(u);
             }
         }
 
@@ -195,50 +162,37 @@
                 try {
                     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true');
                     const data = await res.json();
-                    speak(`Aktuell sind es ${Math.round(data.current_weather.temperature)} Grad.`, mode);
-                } catch (e) { speak("Wetterdaten nicht verfügbar.", mode); }
+                    speak(`Aktuell ${Math.round(data.current_weather.temperature)} Grad.`, mode);
+                } catch (e) { speak("Fehler beim Wetter.", mode); }
             } else if (cmd.includes('timer') && (cmd.includes('auf') || cmd.includes('für'))) {
                 const num = cmd.match(/\d+/);
-                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Minuten.`, mode); }
-            } else if (cmd.includes('start')) { startTimer(); speak("Läuft.", mode); }
-            else if (cmd.includes('stopp') || cmd.includes('pause')) { pauseTimer(); speak("Pausiert.", mode); }
-            else { speak("OK.", mode); }
+                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Min.`, mode); }
+            } else if (cmd.includes('start')) { startTimer(); speak("OK.", mode); }
+            else { speak("Befehl ausgeführt.", mode); }
         }
 
         let recognition = null, voiceActive = false, voiceListening = false;
         if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = true;
-            recognition.lang = 'de-DE';
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript.trim();
-                if (!voiceActive && transcript.toLowerCase().includes('timer')) {
-                    voiceActive = true; 
-                    speak("Ja?", 'voice'); 
-                } else if (voiceActive) {
-                    addChatMessage("Du", transcript);
-                    processIntelligence(transcript, 'voice');
-                    voiceActive = false;
-                }
+            recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.lang = 'de-DE';
+            recognition.onresult = (e) => {
+                const t = e.results[e.results.length - 1][0].transcript.trim();
+                if (!voiceActive && t.toLowerCase().includes('timer')) { voiceActive = true; speak("Ja?", 'voice'); }
+                else if (voiceActive) { addChatMessage("Du", t); processIntelligence(t, 'voice'); voiceActive = false; }
             };
             recognition.onend = () => { if(voiceListening) recognition.start(); };
         }
 
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        document.getElementById('chat-input').onkeypress = (e) => {
             if (e.key === 'Enter') {
-                const val = e.target.value;
-                if(!val) return;
-                addChatMessage("Ich", val);
-                processIntelligence(val, 'chat');
-                e.target.value = '';
+                const val = e.target.value; if(!val) return;
+                addChatMessage("Ich", val); processIntelligence(val, 'chat'); e.target.value = '';
             }
-        });
+        };
 
         function triggerAlarm(title) {
-            isRunning = false; 
-            document.getElementById('modal-title').textContent = title;
+            isRunning = false; document.getElementById('modal-title').textContent = title;
             document.getElementById('complete-modal').classList.remove('hidden');
-            speak(title === "Wecker!" ? "Zeit zum Aufstehen!" : "Zeit abgelaufen!", 'voice');
+            speak(title === "Wecker!" ? "Aufstehen!" : "Zeit abgelaufen!", 'voice');
         }
 
         function startTimer() {
@@ -246,21 +200,18 @@
             if (totalSeconds <= 0) return;
             initialSeconds = totalSeconds; isRunning = true; isPaused = false;
             endTime = Date.now() + totalSeconds * 1000;
-            document.getElementById('start-btn').classList.add('hidden');
-            document.getElementById('pause-btn').classList.remove('hidden');
+            document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden');
         }
-        function pauseTimer() { isPaused = true; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
-        function resetTimer() { isRunning = false; isPaused = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
 
         document.body.addEventListener('click', () => {
             if(!voiceListening) { voiceListening = true; recognition.start(); }
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            document.getElementById('voice-status-text').textContent = 'System Aktiv (Sagen Sie "Timer")';
+            document.getElementById('voice-status-text').textContent = 'System bereit';
         }, {once: true});
 
         document.getElementById('start-btn').onclick = startTimer;
-        document.getElementById('pause-btn').onclick = pauseTimer;
-        document.getElementById('reset-btn').onclick = resetTimer;
+        document.getElementById('pause-btn').onclick = () => { isPaused = true; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
+        document.getElementById('reset-btn').onclick = () => { isRunning = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
         document.getElementById('close-modal-btn').onclick = () => document.getElementById('complete-modal').classList.add('hidden');
     </script>
 </body>
