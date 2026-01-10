@@ -22,11 +22,9 @@
         .control-footer { 
             position: fixed; bottom: 0; left: 0; right: 0; 
             padding: 25px 20px; 
-            /* Mehr Transparenz, stärkerer Blur und erhöhte Sättigung für Premium-Look */
             background: rgba(15, 23, 42, 0.5); 
             backdrop-filter: blur(60px) saturate(180%); 
             -webkit-backdrop-filter: blur(60px) saturate(180%);
-            /* Feinere Lichtkante oben und weicher Schatten für Tiefe */
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
             z-index: 100; display: flex; justify-content: center; align-items: center; gap: 15px; 
@@ -136,6 +134,7 @@
         let userZip = localStorage.getItem('user_zip') || null;
         let timerHistory = JSON.parse(localStorage.getItem('timer_history')) || [];
 
+        // --- HISTORY ---
         function renderHistory() {
             const list = document.getElementById('timer-history-list');
             list.innerHTML = timerHistory.map(item => `
@@ -159,12 +158,46 @@
             renderHistory();
         }
 
-        document.getElementById('chat-header-toggle').onclick = () => {
-            const win = document.getElementById('chat-window');
-            win.classList.toggle('minimized');
-            document.getElementById('min-icon').textContent = win.classList.contains('minimized') ? '▲' : '▼';
+        // --- SPRACHERKENNUNG (Wiederhergestellt) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'de-DE';
+            recognition.continuous = false;
+            
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voice-status-text').textContent = "Ich höre zu...";
+                document.getElementById('rec-indicator').classList.remove('hidden');
+                document.getElementById('voice-status-box').classList.add('bg-white/20');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('voice-status-text').textContent = "Bereit";
+                document.getElementById('rec-indicator').classList.add('hidden');
+                document.getElementById('voice-status-box').classList.remove('bg-white/20');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                addChat("Du (Voice)", transcript);
+                processIntelligence(transcript, 'voice');
+            };
+        } else {
+            document.getElementById('voice-status-text').textContent = "Browser inkompatibel";
+        }
+
+        document.getElementById('mic-toggle-btn').onclick = () => {
+            if (!recognition) return;
+            if (isListening) recognition.stop();
+            else recognition.start();
         };
 
+        // --- WETTER & LOGIK ---
         async function getWeather(zip, m) {
             try {
                 const geo = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${zip}&country=germany&format=json`);
@@ -175,19 +208,20 @@
                     userZip = zip; localStorage.setItem('user_zip', zip);
                     speak(`In ${zip} sind es ${Math.round(wData.current_weather.temperature)} Grad.`, m);
                 }
-            } catch (e) { speak("Fehler.", m); }
+            } catch (e) { speak("Fehler beim Wetter.", m); }
         }
 
         async function processIntelligence(c, m) {
             c = c.trim().toLowerCase();
             if (/^\d{5}$/.test(c)) { await getWeather(c, m); return; }
-            if (c.includes('wetter')) { if(userZip) await getWeather(userZip, m); else speak("PLZ?", m); }
-            else if (c.includes('timer')) { const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); } }
-            else if (c.includes('start')) startTimer();
-            else if (c.includes('stopp')) isPaused = true;
-            else if (c.includes('reset')) resetTimer();
+            if (c.includes('wetter')) { if(userZip) await getWeather(userZip, m); else speak("Welche PLZ?", m); }
+            else if (c.includes('timer')) { const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); speak(`Timer auf ${n[0]} Minuten.`, m); } }
+            else if (c.includes('start')) { startTimer(); speak("Gestartet.", m); }
+            else if (c.includes('stopp') || c.includes('pause')) { isPaused = true; speak("Pausiert.", m); }
+            else if (c.includes('reset')) { resetTimer(); speak("Zurückgesetzt.", m); }
         }
 
+        // --- TIMER CORE ---
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circ = 439.8;
         const worker = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>self.postMessage('t'),100)`], {type:'text/javascript'})));
@@ -197,7 +231,7 @@
             if (isRunning && !isPaused) {
                 totalSeconds = Math.round((endTime - Date.now()) / 1000);
                 if (totalSeconds <= 0) { 
-                    isRunning = false; saveHistory(Math.round(initialSeconds/60)); speak("Zeit um!", "voice"); resetTimer();
+                    isRunning = false; saveHistory(Math.round(initialSeconds/60)); speak("Zeit abgelaufen!", "voice"); resetTimer();
                 } else {
                     const min = Math.floor(totalSeconds / 60).toString().padStart(2, '0'), sec = (totalSeconds % 60).toString().padStart(2, '0');
                     timeDisplay.textContent = `${min}:${sec}`;
@@ -216,6 +250,12 @@
 
         function resetTimer() { isRunning = false; timeDisplay.textContent = "00:00"; ring.style.strokeDashoffset = 0; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
 
+        // --- UI EVENTS ---
+        document.getElementById('chat-header-toggle').onclick = () => {
+            const win = document.getElementById('chat-window');
+            win.classList.toggle('minimized');
+            document.getElementById('min-icon').textContent = win.classList.contains('minimized') ? '▲' : '▼';
+        };
         document.getElementById('info-btn').onclick = () => document.getElementById('info-modal').classList.remove('hidden');
         document.getElementById('close-info-btn').onclick = () => document.getElementById('info-modal').classList.add('hidden');
         document.getElementById('chat-input').onkeypress = (e) => { if (e.key === 'Enter') { addChat("Du", e.target.value); processIntelligence(e.target.value, 'chat'); e.target.value = ''; } };
