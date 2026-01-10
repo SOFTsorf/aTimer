@@ -13,13 +13,24 @@
         /* Patrick Roth Sideline Branding */
         .sideline-brand { position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; font-size: 14px; letter-spacing: 0.5em; text-transform: uppercase; opacity: 0.3; white-space: nowrap; pointer-events: none; z-index: 40; }
         
-        /* Glass Morphism */
+        /* Standard Liquid Glass für Boxen */
         .liquid-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
         .liquid-button { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.2s ease; }
         .liquid-button:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.2); }
         
-        /* Fixed Footer Bar mit Blur */
-        .control-footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 25px 20px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 100; display: flex; justify-content: center; align-items: center; gap: 15px; }
+        /* NEU: Eleganter Fixed Footer */
+        .control-footer { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            padding: 25px 20px; 
+            /* Mehr Transparenz, stärkerer Blur und erhöhte Sättigung für Premium-Look */
+            background: rgba(15, 23, 42, 0.5); 
+            backdrop-filter: blur(60px) saturate(180%); 
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+            /* Feinere Lichtkante oben und weicher Schatten für Tiefe */
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
+            z-index: 100; display: flex; justify-content: center; align-items: center; gap: 15px; 
+        }
 
         .tab-active { background: rgba(255, 255, 255, 0.2); border-bottom: 2px solid white; }
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
@@ -89,7 +100,7 @@
             <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10 minimized">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header-toggle">
                     <h2 class="text-[10px] font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
-                    <span id="min-icon">▲</span>
+                    <span id="min-icon">▼</span>
                 </div>
                 <div id="chat-content">
                     <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64"></div>
