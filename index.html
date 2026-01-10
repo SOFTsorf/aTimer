@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Pro Timer</title>
+    <title>AI Pro Timer - Patrick Roth</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -13,7 +13,7 @@
         .sideline-brand { position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; font-size: 14px; letter-spacing: 0.5em; text-transform: uppercase; opacity: 0.3; white-space: nowrap; pointer-events: none; z-index: 40; }
         
         .liquid-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-        .liquid-button { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.2s ease; }
+        .liquid-button { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.2s ease; cursor: pointer; }
         
         /* Footer & Mic Styling */
         .control-footer { 
@@ -25,20 +25,22 @@
             z-index: 100; display: flex; justify-content: center; align-items: center; gap: 15px; 
         }
 
-        #mic-toggle-btn.active-mic { border: 2px solid #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
-        .mic-slash { position: relative; }
-        .mic-slash::after { content: ''; position: absolute; width: 2px; height: 100%; background: #ef4444; transform: rotate(45deg); display: none; }
-        .mic-disabled .mic-slash::after { display: block; }
+        /* Mic Button Logic */
+        #mic-toggle-btn { position: relative; width: 56px; height: 56px; }
+        .mic-line { stroke: #ef4444; stroke-width: 3; stroke-linecap: round; transition: all 0.3s ease; opacity: 0; }
+        .is-muted .mic-line { opacity: 1; }
+        .is-muted #mic-svg { opacity: 0.4; }
 
-        .tab-active { background: rgba(255, 255, 255, 0.2); border-bottom: 2px solid white; }
+        /* Status Button & Pulsing */
+        @keyframes pulse-green { 
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); border-color: rgba(34, 197, 94, 1); } 
+            100% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); border-color: rgba(34, 197, 94, 0.4); } 
+        }
+        .listening-active { animation: pulse-green 1.5s infinite; color: #4ade80; }
+
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        
-        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 500px; overflow: hidden; }
         #chat-window.minimized { max-height: 52px; }
-        .minimized #chat-content { display: none; }
-        
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-        .listening-active { animation: pulse-green 2s infinite; border-color: #22c55e !important; }
+        #chat-window.minimized #chat-content { display: none; }
     </style>
 </head>
 <body class="min-h-full w-full text-sm">
@@ -46,41 +48,29 @@
     
     <main class="relative min-h-screen w-full flex flex-col items-center p-4 pt-8 bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
         <div class="flex gap-4 mb-4 z-20">
-            <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px] tab-active">Timer</button>
-            <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px]">Wecker</button>
+            <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px] bg-white/10">Timer</button>
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
             <div class="flex flex-col gap-4 flex-1 w-full">
-                <div class="liquid-glass rounded-[2rem] p-6 md:p-8 text-center relative z-10 w-full">
-                    <div id="section-timer">
-                        <h1 class="text-xl font-light mb-8 tracking-widest uppercase text-white/70">Focus Timer</h1>
-                        <div class="relative w-40 h-40 mx-auto mb-6 flex items-center justify-center">
-                            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
-                                <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
-                                <circle id="progress-ring" class="progress-ring__circle text-white/60" stroke-width="6" stroke-dasharray="439.8" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
-                            </svg>
-                            <div id="time-display" class="text-4xl md:text-5xl font-extralight tracking-tighter relative z-10">05:00</div>
-                        </div>
-                        <div class="flex justify-center gap-4 mb-6">
-                            <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/10 p-1 text-center outline-none">
-                            <span class="opacity-20">:</span>
-                            <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/10 p-1 text-center outline-none">
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="start-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Start</button>
-                            <button id="pause-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px] hidden">Pause</button>
-                            <button id="reset-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Reset</button>
-                        </div>
+                <div class="liquid-glass rounded-[2rem] p-6 text-center relative z-10 w-full">
+                    <h1 class="text-xl font-light mb-8 tracking-widest uppercase text-white/70">Focus Timer</h1>
+                    <div class="relative w-40 h-40 mx-auto mb-6 flex items-center justify-center">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
+                            <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
+                            <circle id="progress-ring" class="progress-ring__circle text-white/60" stroke-width="6" stroke-dasharray="439.8" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
+                        </svg>
+                        <div id="time-display" class="text-4xl font-extralight tracking-tighter relative z-10">05:00</div>
                     </div>
-                </div>
-
-                <div class="liquid-glass rounded-[1.5rem] p-4 w-full">
-                    <div class="flex justify-between items-center mb-2 px-2">
-                        <h3 class="text-[9px] uppercase tracking-[0.2em] text-white/40 font-semibold">Letzte Timer</h3>
-                        <button id="clear-history" class="text-[9px] text-white/20 hover:text-white/50 uppercase">Leeren</button>
+                    <div class="flex justify-center gap-4 mb-6">
+                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/10 p-1 text-center outline-none">
+                        <span class="opacity-20">:</span>
+                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/10 p-1 text-center outline-none">
                     </div>
-                    <div id="timer-history-list" class="space-y-1"></div>
+                    <div class="flex gap-2">
+                        <button id="start-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Start</button>
+                        <button id="reset-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Reset</button>
+                    </div>
                 </div>
             </div>
 
@@ -91,29 +81,33 @@
                 </div>
                 <div id="chat-content">
                     <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64"></div>
-                    <input type="text" id="chat-input" placeholder="Befehl oder PLZ..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none">
+                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none">
                 </div>
             </div>
         </div>
     </main>
 
     <footer class="control-footer">
-        <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center active-mic">
-            <div class="mic-slash">
-                <span id="mic-icon" class="text-xl">🎙️</span>
-            </div>
+        <button id="mic-toggle-btn" class="liquid-button p-3 rounded-full flex items-center justify-center border-white/10">
+            <svg id="mic-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+                <line class="mic-line" x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
         </button>
-        <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[150px] md:min-w-[220px] uppercase tracking-[0.2em] transition-all">
+
+        <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[10px] min-w-[180px] md:min-w-[240px] uppercase tracking-[0.2em] transition-all font-bold">
             <span id="voice-status-text">Sag "Hey Timer"</span>
         </button>
-        <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center text-lg">ⓘ</button>
+
+        <button id="info-btn" class="liquid-button p-4 rounded-full flex items-center justify-center text-lg">ⓘ</button>
     </footer>
 
     <script>
-        // --- LOGIK & VARIABLEN ---
-        let userZip = localStorage.getItem('user_zip') || null;
-        let timerHistory = JSON.parse(localStorage.getItem('timer_history')) || [];
-        let isMicEnabled = true;
+        let isMicMuted = false;
+        let isListeningForCommand = false;
 
         // --- SPRACHERKENNUNG ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -122,119 +116,101 @@
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
-            recognition.continuous = true; // Hört dauerhaft zu
+            recognition.continuous = true;
             recognition.interimResults = false;
 
             recognition.onresult = (event) => {
+                if (isMicMuted) return;
                 const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-                console.log("Erkannt:", transcript);
-
+                
                 if (transcript.includes("hey timer")) {
-                    document.getElementById('voice-status-text').textContent = "Ich höre zu...";
-                    document.getElementById('voice-status-box').classList.add('listening-active');
-                    // Der nächste Teil des Transcripts nach "hey timer" wird verarbeitet
-                    const command = transcript.split("hey timer").pop();
-                    if (command) processIntelligence(command, 'voice');
-                } else if (document.getElementById('voice-status-box').classList.contains('listening-active')) {
+                    startListeningSession();
+                } else if (isListeningForCommand) {
                     processIntelligence(transcript, 'voice');
                 }
             };
-
-            recognition.onend = () => { if (isMicEnabled) recognition.start(); };
+            recognition.onend = () => { if (!isMicMuted) recognition.start(); };
             recognition.start();
         }
 
+        function startListeningSession() {
+            isListeningForCommand = true;
+            const btn = document.getElementById('voice-status-box');
+            const txt = document.getElementById('voice-status-text');
+            btn.classList.add('listening-active');
+            txt.textContent = "Ich höre zu...";
+        }
+
+        // FUNKTION: UNTERBRECHEN
+        function stopListeningSession() {
+            isListeningForCommand = false;
+            const btn = document.getElementById('voice-status-box');
+            const txt = document.getElementById('voice-status-text');
+            btn.classList.remove('listening-active');
+            txt.textContent = 'Sag "Hey Timer"';
+            window.speechSynthesis.cancel(); // Stoppt laufende Sprachausgabe
+        }
+
+        // Klick auf großen Button unterbricht
+        document.getElementById('voice-status-box').onclick = stopListeningSession;
+
+        // Mikrofon Stumm-Toggle
         document.getElementById('mic-toggle-btn').onclick = function() {
-            isMicEnabled = !isMicEnabled;
-            this.classList.toggle('active-mic', isMicEnabled);
-            this.classList.toggle('mic-disabled', !isMicEnabled);
-            
-            if (isMicEnabled) {
+            isMicMuted = !isMicMuted;
+            this.classList.toggle('is-muted', isMicMuted);
+            if (isMicMuted) {
+                recognition.stop();
+                stopListeningSession();
+                document.getElementById('voice-status-text').textContent = 'Stummgeschaltet';
+            } else {
                 recognition.start();
                 document.getElementById('voice-status-text').textContent = 'Sag "Hey Timer"';
-                document.getElementById('mic-icon').style.opacity = "1";
-            } else {
-                recognition.stop();
-                document.getElementById('voice-status-text').textContent = 'Mikrofon Aus';
-                document.getElementById('voice-status-box').classList.remove('listening-active');
-                document.getElementById('mic-icon').style.opacity = "0.3";
             }
         };
 
-        // --- TIMER FUNKTIONEN ---
-        let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0;
-        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circ = 439.8;
-        const worker = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>self.postMessage('t'),100)`], {type:'text/javascript'})));
+        // --- LOGIK ---
+        function processIntelligence(c, m) {
+            c = c.trim().toLowerCase();
+            if (c.includes('timer auf')) {
+                const n = c.match(/\d+/);
+                if(n) {
+                    document.getElementById('minutes-input').value = n[0];
+                    startTimer();
+                    speak(`Timer auf ${n[0]} Minuten gesetzt`, m);
+                }
+            }
+            // Nach Befehl zurück in Wartemodus
+            setTimeout(stopListeningSession, 2000);
+        }
 
-        worker.onmessage = () => {
-            if (isRunning && !isPaused) {
+        // --- TIMER CORE ---
+        let totalSeconds = 0, initialSeconds = 0, isRunning = false, endTime = 0;
+        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circ = 439.8;
+        
+        setInterval(() => {
+            if (isRunning) {
                 totalSeconds = Math.round((endTime - Date.now()) / 1000);
                 if (totalSeconds <= 0) { 
-                    isRunning = false; saveHistory(Math.round(initialSeconds/60)); speak("Zeit abgelaufen!", "voice"); resetTimer();
+                    isRunning = false; speak("Zeit abgelaufen!", "voice"); resetTimer();
                 } else {
                     const min = Math.floor(totalSeconds / 60).toString().padStart(2, '0'), sec = (totalSeconds % 60).toString().padStart(2, '0');
                     timeDisplay.textContent = `${min}:${sec}`;
                     ring.style.strokeDashoffset = circ - ((totalSeconds / initialSeconds) * circ);
                 }
             }
-        };
-
-        function processIntelligence(c, m) {
-            c = c.trim().toLowerCase();
-            if (c.includes('stopp') || c.includes('pause')) { 
-                isPaused = true; speak("Pausiert", m); 
-                document.getElementById('voice-status-box').classList.remove('listening-active');
-                document.getElementById('voice-status-text').textContent = 'Sag "Hey Timer"';
-                return; 
-            }
-            if (c.includes('timer auf')) {
-                const n = c.match(/\d+/);
-                if(n) { 
-                    document.getElementById('minutes-input').value = n[0]; 
-                    startTimer(); 
-                    speak(`Timer auf ${n[0]} Minuten gesetzt`, m);
-                }
-            }
-            if (c.includes('reset')) { resetTimer(); speak("Reset durchgeführt", m); }
-            
-            // Status zurücksetzen nach Befehl
-            setTimeout(() => {
-                document.getElementById('voice-status-box').classList.remove('listening-active');
-                document.getElementById('voice-status-text').textContent = 'Sag "Hey Timer"';
-            }, 3000);
-        }
+        }, 1000);
 
         function startTimer() {
             const m = parseInt(document.getElementById('minutes-input').value) || 0;
-            const s = parseInt(document.getElementById('seconds-input').value) || 0;
-            totalSeconds = m * 60 + s; if (totalSeconds <= 0) return;
-            initialSeconds = totalSeconds; isRunning = true; isPaused = false; endTime = Date.now() + totalSeconds * 1000;
-            document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden');
+            totalSeconds = m * 60;
+            if (totalSeconds <= 0) return;
+            initialSeconds = totalSeconds; isRunning = true; endTime = Date.now() + totalSeconds * 1000;
         }
 
-        function resetTimer() { isRunning = false; timeDisplay.textContent = "00:00"; ring.style.strokeDashoffset = 0; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
-        
-        function addChat(s, t) { const h = document.getElementById('chat-history'); h.innerHTML += `<div class="mb-1"><span class="opacity-20 text-[9px]">${s}:</span> <div class="text-white/80">${t}</div></div>`; h.scrollTop = h.scrollHeight; }
+        function resetTimer() { isRunning = false; timeDisplay.textContent = "00:00"; ring.style.strokeDashoffset = 0; }
+        function addChat(s, t) { const h = document.getElementById('chat-history'); h.innerHTML += `<div class="mb-1"><span class="opacity-20 text-[9px]">${s}:</span> <div>${t}</div></div>`; h.scrollTop = h.scrollHeight; }
         function speak(t, m) { addChat("AI", t); if (m === 'voice') { const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; window.speechSynthesis.speak(u); } }
-
-        // Tabs & History Init
         document.getElementById('chat-header-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('minimized');
-        document.getElementById('start-btn').onclick = startTimer;
-        document.getElementById('reset-btn').onclick = resetTimer;
-        
-        function saveHistory(m) {
-            timerHistory.unshift({ minutes: m, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
-            if (timerHistory.length > 4) timerHistory.pop();
-            localStorage.setItem('timer_history', JSON.stringify(timerHistory));
-            renderHistory();
-        }
-        function renderHistory() {
-            document.getElementById('timer-history-list').innerHTML = timerHistory.map(item => `
-                <div class="history-item flex justify-between items-center p-3 rounded-xl text-[11px]" onclick="document.getElementById('minutes-input').value=${item.minutes};resetTimer();">
-                    <span>${item.minutes} Min Timer</span><span class="opacity-30">${item.date}</span>
-                </div>`).join('');
-        }
-        renderHistory();
     </script>
 </body>
 </html>
