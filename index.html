@@ -30,16 +30,17 @@
         #chat-window.minimized { max-height: 48px; width: 160px; overflow: hidden; }
     </style>
 </head>
-<body class="h-full w-full bg-[#0f172a] overflow-hidden text-white">
+<body class="h-full w-full bg-[#0f172a] overflow-hidden text-white text-sm">
     <main class="relative min-h-full w-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
         
         <div class="flex gap-4 mb-4 z-20">
-            <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-xs tab-active">Timer</button>
-            <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-xs">Wecker</button>
+            <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px] tab-active">Timer</button>
+            <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px]">Wecker</button>
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
-            <div class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10 w-full">
+            <div class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10 w-full min-h-[400px]">
+                
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
                     <div class="relative inline-flex items-center justify-center mb-6">
@@ -49,9 +50,9 @@
                         </svg>
                         <div id="time-display" class="absolute text-5xl font-extralight tracking-tighter">05:00</div>
                     </div>
-                    <div class="flex justify-center gap-4 mb-6 text-black">
+                    <div class="flex justify-center gap-4 mb-6">
                         <input type="number" id="minutes-input" value="5" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none text-white">
-                        <span class="text-2xl opacity-30 text-white">:</span>
+                        <span class="text-2xl opacity-30">:</span>
                         <input type="number" id="seconds-input" value="0" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none text-white">
                     </div>
                     <div class="flex gap-2">
@@ -63,39 +64,44 @@
 
                 <div id="section-alarm" class="hidden">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Wecker</h1>
-                    <div class="text-4xl font-extralight mb-8" id="current-clock">00:00:00</div>
-                    <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-2xl text-center w-full mb-4 outline-none text-white">
-                    <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
+                    <div class="text-5xl font-extralight mb-8 mt-10 tracking-widest" id="current-clock">00:00:00</div>
+                    <div class="space-y-6">
+                        <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white">
+                        <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker aktivieren</button>
+                        <div id="active-alarm-info" class="text-xs text-green-400 font-medium hidden">
+                            🔔 Wecker gestellt auf <span id="info-time">00:00</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header">
-                    <h2 class="text-xs font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
-                    <span id="min-icon" class="text-[10px]">▼</span>
+                    <h2 class="text-[10px] font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
+                    <span id="min-icon">▼</span>
                 </div>
                 <div id="chat-content">
-                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64 min-h-[150px]"></div>
-                    <input type="text" id="chat-input" placeholder="Befehl tippen..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
+                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-64 min-h-[150px]"></div>
+                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none focus:border-white/30 transition-all">
                 </div>
             </div>
         </div>
 
-        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10">
+        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[9px] uppercase tracking-[0.2em] z-10 border border-transparent transition-all">
             <span id="voice-status-text">Klicke zum Aktivieren</span>
         </div>
 
         <div id="complete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
             <div class="liquid-glass p-12 rounded-[2rem] text-center max-w-xs w-full">
                 <div class="text-6xl mb-4">⏰</div>
-                <h2 id="modal-title" class="text-2xl font-bold mb-6 uppercase">Zeit um!</h2>
+                <h2 id="modal-title" class="text-2xl font-bold mb-6 uppercase tracking-tight">Zeit um!</h2>
                 <button id="close-modal-btn" class="liquid-button w-full py-4 rounded-xl font-bold">OK</button>
             </div>
         </div>
     </main>
 
     <script>
-        // PWA Service Worker
+        // PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:application/javascript;base64,' + btoa('self.addEventListener("fetch", (e) => {});'));
         }
@@ -105,7 +111,7 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(850, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
             gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
@@ -115,17 +121,24 @@
 
         document.querySelectorAll('button, #chat-header').forEach(el => el.addEventListener('click', playClickSound));
 
-        const chatWin = document.getElementById('chat-window'), minBtn = document.getElementById('chat-header'), minIcon = document.getElementById('min-icon');
-        minBtn.onclick = () => {
-            chatWin.classList.toggle('minimized');
-            minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼';
-        };
-
+        // Tab Navigation
         const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
         const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
-        timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
-        alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
+        
+        timerBtn.onclick = () => {
+            timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden');
+            timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active');
+        };
+        alarmBtn.onclick = () => {
+            alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden');
+            alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active');
+        };
 
+        // Minimierung
+        const chatWin = document.getElementById('chat-window'), minBtn = document.getElementById('chat-header'), minIcon = document.getElementById('min-icon');
+        minBtn.onclick = () => { chatWin.classList.toggle('minimized'); minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼'; };
+
+        // Logik
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 565.48;
 
@@ -136,11 +149,29 @@
             const now = new Date();
             const currentTimeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             document.getElementById('current-clock').textContent = now.toTimeString().split(' ')[0];
-            if (activeAlarmTime === currentTimeStr) { triggerAlarm("Wecker!"); activeAlarmTime = null; }
+            
+            // WECKER PRÜFUNG
+            if (activeAlarmTime && activeAlarmTime === currentTimeStr) {
+                triggerAlarm("Wecker!");
+                activeAlarmTime = null;
+                document.getElementById('active-alarm-info').classList.add('hidden');
+            }
+
             if (isRunning && !isPaused) {
                 totalSeconds = Math.round((endTime - Date.now()) / 1000);
                 if (totalSeconds <= 0) triggerAlarm("Timer!");
                 else updateDisplay(totalSeconds);
+            }
+        };
+
+        // Wecker Button Funktion
+        document.getElementById('set-alarm-btn').onclick = () => {
+            const timeVal = document.getElementById('alarm-time').value;
+            if (timeVal) {
+                activeAlarmTime = timeVal;
+                document.getElementById('info-time').textContent = timeVal;
+                document.getElementById('active-alarm-info').classList.remove('hidden');
+                speak("Wecker für " + timeVal + " Uhr gestellt.", 'chat');
             }
         };
 
@@ -152,7 +183,7 @@
 
         function addChatMessage(sender, text) {
             const div = document.createElement('div');
-            div.innerHTML = `<span class="text-[10px] font-bold text-white/20 uppercase">${sender}:</span> <div class="text-white/80">${text}</div>`;
+            div.innerHTML = `<span class="text-[9px] font-bold text-white/20 uppercase tracking-tighter">${sender}:</span> <div class="text-white/80">${text}</div>`;
             const h = document.getElementById('chat-history'); h.appendChild(div); h.scrollTop = h.scrollHeight;
         }
 
@@ -170,12 +201,16 @@
                     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true');
                     const data = await res.json();
                     speak(`Aktuell sind es ${Math.round(data.current_weather.temperature)} Grad.`, mode);
-                } catch (e) { speak("Wetter nicht verfügbar.", mode); }
+                } catch (e) { speak("Wetter nicht erreichbar.", mode); }
             } else if (cmd.includes('auf') || cmd.includes('für')) {
                 const num = cmd.match(/\d+/);
-                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Minuten gestellt.`, mode); }
-            } else if (cmd.includes('start')) { startTimer(); speak("Gestartet.", mode); }
-            else if (cmd.includes('stopp') || cmd.includes('pause')) { isPaused = true; speak("Pausiert.", mode); }
+                if(num) { 
+                    document.getElementById('minutes-input').value = num[0]; 
+                    startTimer(); 
+                    speak(`Timer auf ${num[0]} Minuten gesetzt.`, mode); 
+                }
+            } else if (cmd.includes('start')) { startTimer(); speak("Läuft.", mode); }
+            else if (cmd.includes('reset')) { resetTimer(); speak("Alles auf Null.", mode); }
             else { speak("Befehl ausgeführt.", mode); }
         }
 
@@ -184,16 +219,15 @@
             recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.lang = 'de-DE';
             recognition.onresult = (e) => {
                 const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
-                // REAKTION AUF "HEY TIMER"
                 if (!voiceActive && (t.includes('hey timer') || t.includes('hei timer'))) { 
                     voiceActive = true; 
-                    speak("Ja, ich höre?", 'voice'); 
+                    speak("Ja?", 'voice'); 
                     document.getElementById('voice-status-box').style.borderColor = "#4ade80";
                 } else if (voiceActive) {
                     addChatMessage("Du", t);
                     processIntelligence(t, 'voice');
                     voiceActive = false;
-                    document.getElementById('voice-status-box').style.borderColor = "";
+                    document.getElementById('voice-status-box').style.borderColor = "transparent";
                 }
             };
             recognition.onend = () => { if(voiceListening) recognition.start(); };
@@ -219,6 +253,7 @@
             endTime = Date.now() + totalSeconds * 1000;
             document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden');
         }
+        function resetTimer() { isRunning = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
 
         document.body.addEventListener('click', () => {
             if(!voiceListening) { voiceListening = true; recognition.start(); }
@@ -228,7 +263,7 @@
 
         document.getElementById('start-btn').onclick = startTimer;
         document.getElementById('pause-btn').onclick = () => { isPaused = true; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
-        document.getElementById('reset-btn').onclick = () => { isRunning = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
+        document.getElementById('reset-btn').onclick = resetTimer;
         document.getElementById('close-modal-btn').onclick = () => document.getElementById('complete-modal').classList.add('hidden');
     </script>
 </body>
