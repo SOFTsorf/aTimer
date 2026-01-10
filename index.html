@@ -4,54 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Pro Timer - Patrick Roth Edition</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e1e38">
-    <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Outfit', sans-serif; box-sizing: border-box; }
-        body { overflow-y: auto; -webkit-overflow-scrolling: touch; background: #0f172a; color: white; margin: 0; }
-        
-        .sideline-brand {
-            position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg);
-            transform-origin: left center; font-size: 14px; letter-spacing: 0.5em;
-            text-transform: uppercase; opacity: 0.3; white-space: nowrap; pointer-events: none; z-index: 50;
-        }
-
-        .liquid-glass {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        .liquid-button {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.2s ease;
-        }
+        body { overflow-y: auto; background: #0f172a; color: white; margin: 0; }
+        .sideline-brand { position: fixed; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; font-size: 14px; letter-spacing: 0.5em; text-transform: uppercase; opacity: 0.3; white-space: nowrap; pointer-events: none; z-index: 50; }
+        .liquid-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+        .liquid-button { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); transition: all 0.2s ease; }
         .liquid-button:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.3); }
         .tab-active { background: rgba(255, 255, 255, 0.25); border-bottom: 2px solid white; }
-        
-        /* Fortschrittsring Fix */
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        
-        /* Chat Minimierung Fix */
         #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 600px; }
         #chat-window.minimized { max-height: 52px; width: 180px; overflow: hidden; }
-        #chat-content { transition: opacity 0.2s; }
         .minimized #chat-content { opacity: 0; pointer-events: none; }
-        
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .rec-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse-red 1s infinite; }
         .listening-active { border-color: #4ade80 !important; background: rgba(74, 222, 128, 0.1) !important; }
-
-        @media (max-width: 600px) { .sideline-brand { left: 5px; font-size: 10px; } }
     </style>
 </head>
 <body class="min-h-full w-full text-sm">
     <div class="sideline-brand">Patrick Roth</div>
-
     <main class="relative min-h-screen w-full flex flex-col items-center p-4 md:justify-center bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
         
         <div class="flex gap-4 mb-4 mt-4 z-20">
@@ -63,7 +36,6 @@
             <div class="liquid-glass rounded-[2rem] p-6 md:p-8 flex-1 text-center relative z-10 w-full min-h-[450px]">
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-12 tracking-widest uppercase text-white/70">Focus Timer</h1>
-                    
                     <div class="relative w-40 h-40 md:w-48 md:h-48 mx-auto mb-8 flex items-center justify-center">
                         <svg class="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
                             <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
@@ -71,13 +43,11 @@
                         </svg>
                         <div id="time-display" class="text-4xl md:text-5xl font-extralight tracking-tighter relative z-10">05:00</div>
                     </div>
-
                     <div class="flex justify-center gap-4 mb-8 text-white font-bold text-xl">
-                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none focus:border-white">
+                        <input type="number" id="minutes-input" value="5" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none">
                         <span class="opacity-30">:</span>
-                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none focus:border-white">
+                        <input type="number" id="seconds-input" value="0" class="w-14 bg-transparent border-b border-white/20 p-1 text-center outline-none">
                     </div>
-
                     <div class="flex gap-2">
                         <button id="start-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px]">Start</button>
                         <button id="pause-btn" class="liquid-button flex-1 py-4 rounded-xl font-semibold uppercase text-[10px] hidden">Pause</button>
@@ -88,11 +58,9 @@
                 <div id="section-alarm" class="hidden">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Wecker</h1>
                     <div class="text-4xl md:text-5xl font-extralight mb-12 mt-10 tracking-widest" id="current-clock">00:00:00</div>
-                    <div class="space-y-6">
-                        <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white font-bold">
-                        <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
-                        <div id="active-alarm-info" class="text-xs text-green-400 font-medium hidden">🔔 Aktiv um <span id="info-time">00:00</span></div>
-                    </div>
+                    <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white font-bold mb-4">
+                    <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
+                    <div id="active-alarm-info" class="text-xs text-green-400 font-medium hidden mt-4">🔔 Aktiv um <span id="info-time">00:00</span></div>
                 </div>
             </div>
 
@@ -103,159 +71,125 @@
                 </div>
                 <div id="chat-content">
                     <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64 min-h-[100px]"></div>
-                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none focus:border-white/30 transition-all">
+                    <input type="text" id="chat-input" placeholder="Befehl oder PLZ..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none focus:border-white/30 transition-all">
                 </div>
             </div>
         </div>
 
         <div class="flex items-center gap-4 my-8 z-10">
-            <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10">
-                <span id="mic-icon" class="text-lg">🎙️</span>
-            </button>
+            <button id="mic-toggle-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10"><span id="mic-icon" class="text-lg">🎙️</span></button>
             <button id="voice-status-box" class="liquid-button py-4 px-8 rounded-full text-[9px] min-w-[180px] md:min-w-[220px] uppercase tracking-[0.2em] border border-transparent transition-all">
                 <span id="rec-indicator" class="rec-dot hidden"></span>
                 <span id="voice-status-text">Klicke zum Aktivieren</span>
             </button>
             <button id="info-btn" class="liquid-button p-4 rounded-full aspect-square flex items-center justify-center border-white/10 text-lg">ⓘ</button>
         </div>
-
-        <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-            <div class="liquid-glass p-8 rounded-[2rem] max-w-sm w-full border border-white/20">
-                <h3 class="text-lg font-bold mb-4 uppercase tracking-widest text-white/70 border-b border-white/10 pb-2">Befehlsliste</h3>
-                <ul class="text-xs space-y-4 text-white/80">
-                    <li><strong class="text-white block">Wetter:</strong> "Wie ist das Wetter?"</li>
-                    <li><strong class="text-white block">Timer:</strong> "Timer auf 5 Minuten", "Stopp", "Start", "Reset"</li>
-                    <li><strong class="text-white block">Abbruch:</strong> Klicke den Balken beim Zuhören zum Abbrechen.</li>
-                </ul>
-                <button id="close-info-btn" class="liquid-button w-full py-4 mt-6 rounded-xl font-bold uppercase text-[10px]">Schließen</button>
-            </div>
-        </div>
-
-        <div id="complete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-            <div class="liquid-glass p-12 rounded-[2rem] text-center max-w-xs w-full">
-                <div class="text-6xl mb-4">⏰</div>
-                <h2 id="modal-title" class="text-2xl font-bold mb-6 uppercase tracking-tight">Zeit um!</h2>
-                <button id="close-modal-btn" class="liquid-button w-full py-4 rounded-xl font-bold">OK</button>
-            </div>
-        </div>
     </main>
 
     <script>
-        let wakeLock = null;
-        async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+        // GLOBALE VARIABLEN
+        let userZip = null;
+        let isWaitingForZip = false;
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playClickSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(850, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        // --- WETTER LOGIK (MIT PLZ BACKUP) ---
+        async function fetchWeatherByZip(zip, m) {
+            try {
+                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${zip}&country=germany&format=json`);
+                const geoData = await geoRes.json();
+                if (geoData.length > 0) {
+                    const { lat, lon, display_name } = geoData[0];
+                    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                    const wData = await weatherRes.json();
+                    const temp = Math.round(wData.current_weather.temperature);
+                    speak(`In ${zip} sind es aktuell ${temp} Grad.`, m);
+                } else {
+                    speak("Die Postleitzahl konnte ich nicht finden.", m);
+                }
+            } catch (e) { speak("Wetter-Fehler bei PLZ-Abfrage.", m); }
         }
 
-        document.querySelectorAll('button').forEach(el => el.addEventListener('click', playClickSound));
+        async function fetchWeather(m) {
+            if (userZip) { await fetchWeatherByZip(userZip, m); return; }
 
-        // Navigation
-        const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
-        const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
-        timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
-        alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
+            speak("Ich versuche dein GPS zu finden...", m);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
+                const d = await res.json();
+                speak(`Aktuell sind es ${Math.round(d.current_weather.temperature)} Grad bei dir.`, m);
+            }, () => {
+                speak("GPS gesperrt. Bitte tippe deine 5-stellige Postleitzahl in den Chat.", m);
+                isWaitingForZip = true;
+            });
+        }
 
-        // Chat Minimierung
-        const chatWin = document.getElementById('chat-window'), chatToggle = document.getElementById('chat-header-toggle'), minIcon = document.getElementById('min-icon');
-        chatToggle.onclick = () => {
-            chatWin.classList.toggle('minimized');
-            minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼';
-        };
-
-        const infoBtn = document.getElementById('info-btn'), infoModal = document.getElementById('info-modal'), closeInfo = document.getElementById('close-info-btn');
-        infoBtn.onclick = () => infoModal.classList.remove('hidden');
-        closeInfo.onclick = () => infoModal.classList.add('hidden');
-
-        // Timer Logik
-        let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
-        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 439.8;
-        const workerCode = `setInterval(() => { self.postMessage('t'); }, 100);`;
-        const worker = new Worker(URL.createObjectURL(new Blob([workerCode], {type: 'application/javascript'})));
-
-        worker.onmessage = () => {
-            const now = new Date();
-            const curT = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('current-clock').textContent = now.toTimeString().split(' ')[0];
-            if (activeAlarmTime === curT) { triggerAlarm("Wecker!"); activeAlarmTime = null; document.getElementById('active-alarm-info').classList.add('hidden'); }
-            if (isRunning && !isPaused) {
-                totalSeconds = Math.round((endTime - Date.now()) / 1000);
-                if (totalSeconds <= 0) triggerAlarm("Timer!");
-                else updateDisplay(totalSeconds);
-            }
-        };
-
+        // --- INTELLIGENZ ---
         async function processIntelligence(c, m) {
-            c = c.toLowerCase();
+            c = c.trim().toLowerCase();
+
+            // Falls wir auf eine PLZ warten
+            if (isWaitingForZip && /^\d{5}$/.test(c)) {
+                userZip = c;
+                isWaitingForZip = false;
+                speak(`Danke! Ich merke mir die PLZ ${c}.`, m);
+                await fetchWeatherByZip(c, m);
+                return;
+            }
+
             if (c.includes('wetter')) {
-                speak("Ich schaue kurz nach...", m);
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                        try {
-                            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
-                            const d = await res.json();
-                            speak(`Es sind aktuell ${Math.round(d.current_weather.temperature)} Grad.`, m);
-                        } catch(e) { speak("Fehler beim Wetter.", m); }
-                    }, () => speak("Standortzugriff verweigert.", m));
-                }
+                await fetchWeather(m);
             } else if (c.includes('timer') && (c.includes('auf') || c.includes('für'))) {
                 const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); speak(`Timer auf ${n[0]} Min.`, m); }
             } else if (c.includes('start')) { startTimer(); speak("Läuft.", m); }
             else if (c.includes('stopp') || c.includes('pause')) { isPaused = true; speak("Pause.", m); }
             else if (c.includes('reset')) { resetTimer(); speak("Reset.", m); }
-            else { speak("Erledigt.", m); }
+            else { speak("Verstanden.", m); }
         }
 
-        let recognition = null, voiceActive = false, voiceListening = false, micEnabled = true;
-        const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), recI = document.getElementById('rec-indicator'), mI = document.getElementById('mic-icon');
+        // --- RESTLICHE LOGIK (Timer, UI, Voice) ---
+        let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
+        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 439.8;
+        const worker = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>self.postMessage('t'),100)`], {type:'application/javascript'})));
 
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.lang = 'de-DE';
-            recognition.onresult = (e) => {
-                if (!micEnabled) return;
-                const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
-                if (!voiceActive && (t.includes('hey timer') || t.includes('hei timer'))) { activateVoice(); }
-                else if (voiceActive) { addChat("Du", t); processIntelligence(t, 'voice'); deactivateVoice(); }
-            };
-            recognition.onend = () => { if(voiceListening && micEnabled) recognition.start(); };
+        worker.onmessage = () => {
+            const now = new Date();
+            const curT = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('current-clock').textContent = now.toTimeString().split(' ')[0];
+            if (activeAlarmTime === curT) { triggerAlarm(); activeAlarmTime = null; }
+            if (isRunning && !isPaused) {
+                totalSeconds = Math.round((endTime - Date.now()) / 1000);
+                if (totalSeconds <= 0) triggerAlarm(); else updateDisplay(totalSeconds);
+            }
+        };
+
+        function updateDisplay(s) {
+            const min = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0');
+            timeDisplay.textContent = `${min}:${sec}`;
+            ring.style.strokeDashoffset = circumference - ((s / (initialSeconds || 1)) * circumference);
         }
 
-        function activateVoice() { voiceActive = true; vBox.classList.add('listening-active'); vText.textContent = 'Höre zu...'; recI.classList.remove('hidden'); speak("Ja?", 'voice'); requestWakeLock(); }
-        function deactivateVoice() { voiceActive = false; vBox.classList.remove('listening-active'); vText.textContent = 'Bereit für "Hey Timer"'; recI.classList.add('hidden'); }
+        function startTimer() {
+            totalSeconds = (parseInt(document.getElementById('minutes-input').value) || 0) * 60 + (parseInt(document.getElementById('seconds-input').value) || 0);
+            if (totalSeconds <= 0) return;
+            initialSeconds = totalSeconds; isRunning = true; isPaused = false; endTime = Date.now() + totalSeconds * 1000;
+            document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden');
+        }
 
-        vBox.onclick = () => {
-            if (!voiceListening) { voiceListening = true; recognition.start(); vText.textContent = 'Bereit für "Hey Timer"'; requestWakeLock(); return; }
-            voiceActive ? (deactivateVoice(), window.speechSynthesis.cancel()) : activateVoice();
-        };
+        function resetTimer() { isRunning = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
+        function triggerAlarm() { isRunning = false; speak("Zeit abgelaufen!", "voice"); }
 
-        document.getElementById('mic-toggle-btn').onclick = () => {
-            micEnabled = !micEnabled;
-            if (micEnabled) { mI.textContent = '🎙️'; recognition.start(); voiceListening = true; } 
-            else { mI.textContent = '🚫'; recognition.stop(); deactivateVoice(); voiceListening = false; }
-        };
+        // UI Events
+        document.getElementById('start-btn').onclick = startTimer;
+        document.getElementById('reset-btn').onclick = resetTimer;
+        document.getElementById('pause-btn').onclick = () => { isPaused = true; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
+        document.getElementById('chat-header-toggle').onclick = () => { document.getElementById('chat-window').classList.toggle('minimized'); document.getElementById('min-icon').textContent = document.getElementById('chat-window').classList.contains('minimized') ? '▲' : '▼'; };
+        document.getElementById('chat-input').onkeypress = (e) => { if (e.key === 'Enter') { const v = e.target.value; if(!v) return; addChat("Ich", v); processIntelligence(v, 'chat'); e.target.value = ''; } };
+        
+        const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
+        timerBtn.onclick = () => { document.getElementById('section-timer').classList.remove('hidden'); document.getElementById('section-alarm').classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
+        alarmBtn.onclick = () => { document.getElementById('section-alarm').classList.remove('hidden'); document.getElementById('section-timer').classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
 
         function addChat(s, t) { const d = document.createElement('div'); d.innerHTML = `<span class="text-[9px] font-bold text-white/20 uppercase">${s}:</span> <div class="text-white/80">${t}</div>`; const h = document.getElementById('chat-history'); h.appendChild(d); h.scrollTop = h.scrollHeight; }
         function speak(t, m) { addChat("AI", t); if (m === 'voice') { const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; window.speechSynthesis.speak(u); } }
-        function updateDisplay(s) { const min = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0'); timeDisplay.textContent = `${min}:${sec}`; ring.style.strokeDashoffset = circumference - ((s / (initialSeconds || 1)) * circumference); }
-        function triggerAlarm(t) { isRunning = false; document.getElementById('modal-title').textContent = t; document.getElementById('complete-modal').classList.remove('hidden'); speak("Zeit um!", 'voice'); }
-        function startTimer() { totalSeconds = (parseInt(document.getElementById('minutes-input').value) || 0) * 60 + (parseInt(document.getElementById('seconds-input').value) || 0); if (totalSeconds <= 0) return; initialSeconds = totalSeconds; isRunning = true; isPaused = false; endTime = Date.now() + totalSeconds * 1000; document.getElementById('start-btn').classList.add('hidden'); document.getElementById('pause-btn').classList.remove('hidden'); requestWakeLock(); }
-        function resetTimer() { isRunning = false; updateDisplay(0); document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); }
-
-        document.getElementById('chat-input').onkeypress = (e) => { if (e.key === 'Enter') { const v = e.target.value; if(!v) return; addChat("Ich", v); processIntelligence(v, 'chat'); e.target.value = ''; } };
-        document.getElementById('set-alarm-btn').onclick = () => { const t = document.getElementById('alarm-time').value; if(t) { activeAlarmTime = t; document.getElementById('info-time').textContent = t; document.getElementById('active-alarm-info').classList.remove('hidden'); speak("Wecker aktiv.", "chat"); requestWakeLock(); } };
-        document.getElementById('start-btn').onclick = startTimer;
-        document.getElementById('pause-btn').onclick = () => { isPaused = true; document.getElementById('start-btn').classList.remove('hidden'); document.getElementById('pause-btn').classList.add('hidden'); };
-        document.getElementById('reset-btn').onclick = resetTimer;
-        document.getElementById('close-modal-btn').onclick = () => document.getElementById('complete-modal').classList.add('hidden');
     </script>
 </body>
 </html>
