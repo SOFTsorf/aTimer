@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Hybrid Timer</title>
+    <title>AI Pro Timer</title>
     <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -18,14 +18,18 @@
         .liquid-button {
             background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
         }
-        .liquid-button:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+        .liquid-button:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.3); }
         .tab-active { background: rgba(255, 255, 255, 0.25); border-bottom: 2px solid white; }
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
         .hidden { display: none; }
         #chat-history::-webkit-scrollbar { width: 4px; }
         #chat-history::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        
+        /* Chat Minimierung Animation */
+        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 500px; }
+        #chat-window.minimized { max-height: 48px; width: 150px; overflow: hidden; }
     </style>
 </head>
 <body class="h-full w-full bg-[#0f172a] overflow-hidden text-white">
@@ -36,8 +40,9 @@
             <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-xs">Wecker</button>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-stretch">
-            <div id="section-container" class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10">
+        <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
+            
+            <div class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10 w-full">
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
                     <div class="relative inline-flex items-center justify-center mb-6">
@@ -63,23 +68,27 @@
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Wecker</h1>
                     <div class="text-4xl font-extralight mb-8" id="current-clock">00:00:00</div>
                     <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-2xl text-center w-full mb-4 outline-none text-white">
-                    <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs mb-4">Wecker stellen</button>
-                    <div id="active-alarm-info" class="text-xs text-green-400 hidden">Aktiviert für <span id="info-time">--:--</span></div>
+                    <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker stellen</button>
                 </div>
             </div>
 
-            <div class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10">
-                <h2 class="text-xs font-semibold uppercase tracking-widest mb-4 text-white/50">Chat & Log</h2>
-                <div id="chat-history" class="flex-1 overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64">
-                    <div class="text-white/40 italic">System bereit...</div>
+            <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header">
+                    <h2 class="text-xs font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
+                    <button id="minimize-btn" class="text-white/30 hover:text-white">
+                        <span id="min-icon">▼</span>
+                    </button>
                 </div>
-                <div class="relative">
-                    <input type="text" id="chat-input" placeholder="Befehl tippen..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
+                <div id="chat-content" class="flex flex-col h-full">
+                    <div id="chat-history" class="flex-1 overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64 min-h-[150px]">
+                        <div class="text-white/40 italic text-[10px]">System bereit...</div>
+                    </div>
+                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
                 </div>
             </div>
         </div>
 
-        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10">
+        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10 transition-all">
             <span id="voice-status-text">Klicke zum Aktivieren</span>
         </div>
 
@@ -93,39 +102,62 @@
     </main>
 
     <script>
-        const workerCode = `setInterval(() => { self.postMessage('stay_alive'); }, 100);`;
-        const blob = new Blob([workerCode], {type: 'application/javascript'});
-        const worker = new Worker(URL.createObjectURL(blob));
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        function enableBackgroundAudio() {
-            const buffer = audioCtx.createBuffer(1, 1, 22050);
-            const source = audioCtx.createBufferSource();
-            source.buffer = buffer; source.loop = true;
-            source.connect(audioCtx.destination); source.start();
+        // --- SOUND GENERATOR ---
+        function playClickSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
         }
+
+        // Globaler Sound-Listener für alle Buttons
+        document.querySelectorAll('button, .cursor-pointer').forEach(btn => {
+            btn.addEventListener('click', playClickSound);
+        });
+
+        // --- NAVIGATION & CHAT MINIMIZE ---
+        const chatWin = document.getElementById('chat-window');
+        const minBtn = document.getElementById('chat-header');
+        const minIcon = document.getElementById('min-icon');
+
+        minBtn.onclick = () => {
+            chatWin.classList.toggle('minimized');
+            minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼';
+        };
 
         const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
         const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
-        timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
-        alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
+        timerBtn.onclick = () => { 
+            timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); 
+            timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active');
+        };
+        alarmBtn.onclick = () => { 
+            alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); 
+            alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active');
+        };
 
+        // --- TIMER LOGIK ---
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 565.48;
 
-        function addChatMessage(sender, text) {
-            const div = document.createElement('div');
-            div.innerHTML = `<span class="font-bold text-white/30">${sender}:</span> <span class="text-white/80">${text}</span>`;
-            const history = document.getElementById('chat-history');
-            history.appendChild(div);
-            history.scrollTop = history.scrollHeight;
-        }
+        const workerCode = `setInterval(() => { self.postMessage('stay_alive'); }, 100);`;
+        const worker = new Worker(URL.createObjectURL(new Blob([workerCode], {type: 'application/javascript'})));
 
         worker.onmessage = function() {
             const now = new Date();
             const currentTimeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             document.getElementById('current-clock').textContent = now.toTimeString().split(' ')[0];
-            if (activeAlarmTime === currentTimeStr) { triggerAlarm("Wecker!"); activeAlarmTime = null; document.getElementById('active-alarm-info').classList.add('hidden'); }
+            if (activeAlarmTime === currentTimeStr) { triggerAlarm("Wecker!"); activeAlarmTime = null; }
             if (isRunning && !isPaused) {
                 totalSeconds = Math.round((endTime - Date.now()) / 1000);
                 if (totalSeconds <= 0) triggerAlarm("Timer!");
@@ -139,9 +171,17 @@
             ring.style.strokeDashoffset = circumference - ((s / initialSeconds) * circumference);
         }
 
+        // --- SPRACHE & INTELLIGENZ ---
+        function addChatMessage(sender, text) {
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="text-[10px] font-bold text-white/20 uppercase">${sender}:</span> <div class="text-white/80">${text}</div>`;
+            const history = document.getElementById('chat-history');
+            history.appendChild(div);
+            history.scrollTop = history.scrollHeight;
+        }
+
         function speak(text, mode) {
-            addChatMessage("Bot", text);
-            // Nur sprechen, wenn der Modus 'voice' ist
+            addChatMessage("AI", text);
             if (mode === 'voice') {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'de-DE';
@@ -157,22 +197,12 @@
                     const data = await res.json();
                     speak(`Aktuell sind es ${Math.round(data.current_weather.temperature)} Grad.`, mode);
                 } catch (e) { speak("Wetterdaten nicht verfügbar.", mode); }
-            }
-            else if (cmd.includes('uhrzeit') || cmd.includes('wie spät')) {
-                speak(`Es ist jetzt ${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr.`, mode);
-            }
-            else if (cmd.includes('timer') && (cmd.includes('auf') || cmd.includes('für'))) {
+            } else if (cmd.includes('timer') && (cmd.includes('auf') || cmd.includes('für'))) {
                 const num = cmd.match(/\d+/);
-                if(num) { 
-                    document.getElementById('minutes-input').value = num[0]; 
-                    startTimer(); 
-                    speak(`Timer auf ${num[0]} Minuten gestellt.`, mode); 
-                }
-            }
-            else if (cmd.includes('start')) { startTimer(); speak("Timer gestartet.", mode); }
+                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Minuten.`, mode); }
+            } else if (cmd.includes('start')) { startTimer(); speak("Läuft.", mode); }
             else if (cmd.includes('stopp') || cmd.includes('pause')) { pauseTimer(); speak("Pausiert.", mode); }
-            else if (cmd.includes('reset')) { resetTimer(); speak("Alles auf Null.", mode); }
-            else { speak("Befehl ausgeführt.", mode); }
+            else { speak("OK.", mode); }
         }
 
         let recognition = null, voiceActive = false, voiceListening = false;
@@ -184,13 +214,11 @@
                 const transcript = event.results[event.results.length - 1][0].transcript.trim();
                 if (!voiceActive && transcript.toLowerCase().includes('timer')) {
                     voiceActive = true; 
-                    document.getElementById('voice-status-box').style.background = 'rgba(100,255,100,0.3)';
                     speak("Ja?", 'voice'); 
                 } else if (voiceActive) {
-                    addChatMessage("Du (Voice)", transcript);
+                    addChatMessage("Du", transcript);
                     processIntelligence(transcript, 'voice');
                     voiceActive = false;
-                    document.getElementById('voice-status-box').style.background = '';
                 }
             };
             recognition.onend = () => { if(voiceListening) recognition.start(); };
@@ -200,16 +228,17 @@
             if (e.key === 'Enter') {
                 const val = e.target.value;
                 if(!val) return;
-                addChatMessage("Du (Chat)", val);
-                processIntelligence(val, 'chat'); // Modus 'chat' -> kein Audio
+                addChatMessage("Ich", val);
+                processIntelligence(val, 'chat');
                 e.target.value = '';
             }
         });
 
         function triggerAlarm(title) {
-            isRunning = false; document.getElementById('modal-title').textContent = title;
+            isRunning = false; 
+            document.getElementById('modal-title').textContent = title;
             document.getElementById('complete-modal').classList.remove('hidden');
-            speak(title === "Wecker!" ? "Aufstehen!" : "Zeit abgelaufen!", 'voice'); // Alarme sprechen immer
+            speak(title === "Wecker!" ? "Zeit zum Aufstehen!" : "Zeit abgelaufen!", 'voice');
         }
 
         function startTimer() {
@@ -226,8 +255,7 @@
         document.body.addEventListener('click', () => {
             if(!voiceListening) { voiceListening = true; recognition.start(); }
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            enableBackgroundAudio();
-            document.getElementById('voice-status-text').textContent = 'Aktiv: Sage "Timer..."';
+            document.getElementById('voice-status-text').textContent = 'System Aktiv (Sagen Sie "Timer")';
         }, {once: true});
 
         document.getElementById('start-btn').onclick = startTimer;
