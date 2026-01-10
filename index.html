@@ -2,7 +2,7 @@
 <html lang="de" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Pro Timer</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e38">
@@ -11,6 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Outfit', sans-serif; box-sizing: border-box; }
+        
+        /* Erlaubt Scrollen auf dem Handy, wenn der Inhalt zu groß ist */
+        body { 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
+
         .liquid-glass {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -26,29 +33,37 @@
         .tab-active { background: rgba(255, 255, 255, 0.25); border-bottom: 2px solid white; }
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
         .hidden { display: none; }
-        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 500px; }
-        #chat-window.minimized { max-height: 48px; width: 160px; overflow: hidden; }
+        
+        /* Chat Fenster Design */
+        #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 600px; }
+        #chat-window.minimized { max-height: 52px; width: 160px; overflow: hidden; }
+
+        /* Optimierung für mobile Ansicht */
+        @media (max-width: 768px) {
+            #chat-window.minimized { width: 100%; }
+            main { padding-bottom: 100px; } /* Platz für den Voice-Status unten */
+        }
     </style>
 </head>
-<body class="h-full w-full bg-[#0f172a] overflow-hidden text-white text-sm">
-    <main class="relative min-h-full w-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
+<body class="min-h-full w-full bg-[#0f172a] text-white text-sm">
+    <main class="relative min-h-screen w-full flex flex-col items-center p-4 md:justify-center bg-gradient-to-br from-[#1e1e38] via-[#111827] to-[#0f172a]">
         
-        <div class="flex gap-4 mb-4 z-20">
+        <div class="flex gap-4 mb-4 mt-4 z-20">
             <button id="tab-timer-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px] tab-active">Timer</button>
             <button id="tab-alarm-btn" class="liquid-button px-6 py-2 rounded-t-xl uppercase tracking-widest text-[10px]">Wecker</button>
         </div>
 
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-4xl items-start justify-center">
-            <div class="liquid-glass rounded-[2rem] p-8 flex-1 text-center relative z-10 w-full min-h-[400px]">
+            <div class="liquid-glass rounded-[2rem] p-6 md:p-8 flex-1 text-center relative z-10 w-full min-h-[400px]">
                 
                 <div id="section-timer">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Focus Timer</h1>
                     <div class="relative inline-flex items-center justify-center mb-6">
-                        <svg class="w-48 h-48">
-                            <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="90" cx="96" cy="96"/>
-                            <circle id="progress-ring" class="progress-ring__circle text-white/60" stroke-width="6" stroke-dasharray="565.48" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="90" cx="96" cy="96"/>
+                        <svg class="w-40 h-40 md:w-48 md:h-48">
+                            <circle class="text-white/5" stroke-width="6" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80" class="md:r-90 md:cx-96 md:cy-96"/>
+                            <circle id="progress-ring" class="progress-ring__circle text-white/60" stroke-width="6" stroke-dasharray="439.8" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80"/>
                         </svg>
-                        <div id="time-display" class="absolute text-5xl font-extralight tracking-tighter">05:00</div>
+                        <div id="time-display" class="absolute text-4xl md:text-5xl font-extralight tracking-tighter">05:00</div>
                     </div>
                     <div class="flex justify-center gap-4 mb-6">
                         <input type="number" id="minutes-input" value="5" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none text-white">
@@ -64,7 +79,7 @@
 
                 <div id="section-alarm" class="hidden">
                     <h1 class="text-xl font-light mb-6 tracking-widest uppercase text-white/70">Wecker</h1>
-                    <div class="text-5xl font-extralight mb-8 mt-10 tracking-widest" id="current-clock">00:00:00</div>
+                    <div class="text-4xl md:text-5xl font-extralight mb-8 mt-10 tracking-widest" id="current-clock">00:00:00</div>
                     <div class="space-y-6">
                         <input type="time" id="alarm-time" class="bg-white/10 border border-white/20 rounded-xl p-4 text-3xl text-center w-full outline-none text-white">
                         <button id="set-alarm-btn" class="liquid-button w-full py-4 rounded-xl font-semibold uppercase text-xs">Wecker aktivieren</button>
@@ -81,13 +96,13 @@
                     <span id="min-icon">▼</span>
                 </div>
                 <div id="chat-content">
-                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-64 min-h-[150px]"></div>
+                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-xs pr-2 h-48 md:h-64 min-h-[100px]"></div>
                     <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs outline-none focus:border-white/30 transition-all">
                 </div>
             </div>
         </div>
 
-        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[9px] uppercase tracking-[0.2em] z-10 border border-transparent transition-all">
+        <div id="voice-status-box" class="liquid-button my-8 py-2 px-6 rounded-full text-[9px] uppercase tracking-[0.2em] z-10 border border-transparent transition-all">
             <span id="voice-status-text">Klicke zum Aktivieren</span>
         </div>
 
@@ -101,7 +116,7 @@
     </main>
 
     <script>
-        // PWA
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:application/javascript;base64,' + btoa('self.addEventListener("fetch", (e) => {});'));
         }
@@ -134,13 +149,12 @@
             alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active');
         };
 
-        // Minimierung
         const chatWin = document.getElementById('chat-window'), minBtn = document.getElementById('chat-header'), minIcon = document.getElementById('min-icon');
         minBtn.onclick = () => { chatWin.classList.toggle('minimized'); minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼'; };
 
         // Logik
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
-        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 565.48;
+        const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 439.8;
 
         const workerCode = `setInterval(() => { self.postMessage('stay_alive'); }, 100);`;
         const worker = new Worker(URL.createObjectURL(new Blob([workerCode], {type: 'application/javascript'})));
@@ -150,7 +164,6 @@
             const currentTimeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             document.getElementById('current-clock').textContent = now.toTimeString().split(' ')[0];
             
-            // WECKER PRÜFUNG
             if (activeAlarmTime && activeAlarmTime === currentTimeStr) {
                 triggerAlarm("Wecker!");
                 activeAlarmTime = null;
@@ -164,14 +177,13 @@
             }
         };
 
-        // Wecker Button Funktion
         document.getElementById('set-alarm-btn').onclick = () => {
             const timeVal = document.getElementById('alarm-time').value;
             if (timeVal) {
                 activeAlarmTime = timeVal;
                 document.getElementById('info-time').textContent = timeVal;
                 document.getElementById('active-alarm-info').classList.remove('hidden');
-                speak("Wecker für " + timeVal + " Uhr gestellt.", 'chat');
+                addChatMessage("System", "Wecker für " + timeVal + " gestellt.");
             }
         };
 
@@ -210,8 +222,8 @@
                     speak(`Timer auf ${num[0]} Minuten gesetzt.`, mode); 
                 }
             } else if (cmd.includes('start')) { startTimer(); speak("Läuft.", mode); }
-            else if (cmd.includes('reset')) { resetTimer(); speak("Alles auf Null.", mode); }
-            else { speak("Befehl ausgeführt.", mode); }
+            else if (cmd.includes('reset')) { resetTimer(); speak("Reset durchgeführt.", mode); }
+            else { speak("Befehl verarbeitet.", mode); }
         }
 
         let recognition = null, voiceActive = false, voiceListening = false;
