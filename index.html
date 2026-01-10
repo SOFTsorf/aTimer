@@ -6,7 +6,6 @@
     <title>AI Pro Timer</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e38">
-    
     <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/previews/026/633/109/original/timer-icon-symbol-design-illustration-vector.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -28,7 +27,7 @@
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
         .hidden { display: none; }
         #chat-window { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 500px; }
-        #chat-window.minimized { max-height: 48px; width: 150px; overflow: hidden; }
+        #chat-window.minimized { max-height: 48px; width: 160px; overflow: hidden; }
     </style>
 </head>
 <body class="h-full w-full bg-[#0f172a] overflow-hidden text-white">
@@ -50,10 +49,10 @@
                         </svg>
                         <div id="time-display" class="absolute text-5xl font-extralight tracking-tighter">05:00</div>
                     </div>
-                    <div class="flex justify-center gap-4 mb-6">
-                        <input type="number" id="minutes-input" value="5" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none">
-                        <span class="text-2xl opacity-30">:</span>
-                        <input type="number" id="seconds-input" value="0" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none">
+                    <div class="flex justify-center gap-4 mb-6 text-black">
+                        <input type="number" id="minutes-input" value="5" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none text-white">
+                        <span class="text-2xl opacity-30 text-white">:</span>
+                        <input type="number" id="seconds-input" value="0" class="w-14 bg-white/10 border border-white/20 rounded-xl p-2 text-center text-lg outline-none text-white">
                     </div>
                     <div class="flex gap-2">
                         <button id="start-btn" class="liquid-button flex-1 py-3 rounded-xl font-semibold uppercase text-[10px]">Start</button>
@@ -73,16 +72,16 @@
             <div id="chat-window" class="liquid-glass rounded-[2rem] p-6 w-full md:w-80 flex flex-col relative z-10 border border-white/10">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" id="chat-header">
                     <h2 class="text-xs font-semibold uppercase tracking-widest text-white/50">Chat & Log</h2>
-                    <span id="min-icon">▼</span>
+                    <span id="min-icon" class="text-[10px]">▼</span>
                 </div>
-                <div id="chat-content" class="flex flex-col h-full">
-                    <div id="chat-history" class="flex-1 overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64 min-h-[150px]"></div>
-                    <input type="text" id="chat-input" placeholder="Befehl..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
+                <div id="chat-content">
+                    <div id="chat-history" class="overflow-y-auto mb-4 space-y-2 text-sm pr-2 h-64 min-h-[150px]"></div>
+                    <input type="text" id="chat-input" placeholder="Befehl tippen..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-white/30 transition-all">
                 </div>
             </div>
         </div>
 
-        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10 transition-all">
+        <div id="voice-status-box" class="liquid-button mt-6 py-2 px-6 rounded-full text-[10px] uppercase tracking-widest z-10">
             <span id="voice-status-text">Klicke zum Aktivieren</span>
         </div>
 
@@ -96,7 +95,7 @@
     </main>
 
     <script>
-        // PWA SERVICE WORKER REGISTRIERUNG
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:application/javascript;base64,' + btoa('self.addEventListener("fetch", (e) => {});'));
         }
@@ -108,16 +107,24 @@
             const gain = audioCtx.createGain();
             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
-        document.querySelectorAll('button, .cursor-pointer').forEach(btn => btn.addEventListener('click', playClickSound));
+        document.querySelectorAll('button, #chat-header').forEach(el => el.addEventListener('click', playClickSound));
 
         const chatWin = document.getElementById('chat-window'), minBtn = document.getElementById('chat-header'), minIcon = document.getElementById('min-icon');
-        minBtn.onclick = () => { chatWin.classList.toggle('minimized'); minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼'; };
+        minBtn.onclick = () => {
+            chatWin.classList.toggle('minimized');
+            minIcon.textContent = chatWin.classList.contains('minimized') ? '▲' : '▼';
+        };
+
+        const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
+        const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
+        timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
+        alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
 
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, isPaused = false, endTime = 0, activeAlarmTime = null;
         const timeDisplay = document.getElementById('time-display'), ring = document.getElementById('progress-ring'), circumference = 565.48;
@@ -140,7 +147,7 @@
         function updateDisplay(s) {
             const mins = Math.floor(s / 60).toString().padStart(2, '0'), secs = (s % 60).toString().padStart(2, '0');
             timeDisplay.textContent = `${mins}:${secs}`;
-            ring.style.strokeDashoffset = circumference - ((s / initialSeconds) * circumference);
+            ring.style.strokeDashoffset = circumference - ((s / (initialSeconds || 1)) * circumference);
         }
 
         function addChatMessage(sender, text) {
@@ -162,12 +169,13 @@
                 try {
                     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true');
                     const data = await res.json();
-                    speak(`Aktuell ${Math.round(data.current_weather.temperature)} Grad.`, mode);
-                } catch (e) { speak("Fehler beim Wetter.", mode); }
-            } else if (cmd.includes('timer') && (cmd.includes('auf') || cmd.includes('für'))) {
+                    speak(`Aktuell sind es ${Math.round(data.current_weather.temperature)} Grad.`, mode);
+                } catch (e) { speak("Wetter nicht verfügbar.", mode); }
+            } else if (cmd.includes('auf') || cmd.includes('für')) {
                 const num = cmd.match(/\d+/);
-                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Min.`, mode); }
-            } else if (cmd.includes('start')) { startTimer(); speak("OK.", mode); }
+                if(num) { document.getElementById('minutes-input').value = num[0]; startTimer(); speak(`Timer auf ${num[0]} Minuten gestellt.`, mode); }
+            } else if (cmd.includes('start')) { startTimer(); speak("Gestartet.", mode); }
+            else if (cmd.includes('stopp') || cmd.includes('pause')) { isPaused = true; speak("Pausiert.", mode); }
             else { speak("Befehl ausgeführt.", mode); }
         }
 
@@ -175,9 +183,18 @@
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.lang = 'de-DE';
             recognition.onresult = (e) => {
-                const t = e.results[e.results.length - 1][0].transcript.trim();
-                if (!voiceActive && t.toLowerCase().includes('timer')) { voiceActive = true; speak("Ja?", 'voice'); }
-                else if (voiceActive) { addChatMessage("Du", t); processIntelligence(t, 'voice'); voiceActive = false; }
+                const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
+                // REAKTION AUF "HEY TIMER"
+                if (!voiceActive && (t.includes('hey timer') || t.includes('hei timer'))) { 
+                    voiceActive = true; 
+                    speak("Ja, ich höre?", 'voice'); 
+                    document.getElementById('voice-status-box').style.borderColor = "#4ade80";
+                } else if (voiceActive) {
+                    addChatMessage("Du", t);
+                    processIntelligence(t, 'voice');
+                    voiceActive = false;
+                    document.getElementById('voice-status-box').style.borderColor = "";
+                }
             };
             recognition.onend = () => { if(voiceListening) recognition.start(); };
         }
@@ -192,7 +209,7 @@
         function triggerAlarm(title) {
             isRunning = false; document.getElementById('modal-title').textContent = title;
             document.getElementById('complete-modal').classList.remove('hidden');
-            speak(title === "Wecker!" ? "Aufstehen!" : "Zeit abgelaufen!", 'voice');
+            speak(title === "Wecker!" ? "Zeit zum Aufstehen!" : "Die Zeit ist um!", 'voice');
         }
 
         function startTimer() {
@@ -206,7 +223,7 @@
         document.body.addEventListener('click', () => {
             if(!voiceListening) { voiceListening = true; recognition.start(); }
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            document.getElementById('voice-status-text').textContent = 'System bereit';
+            document.getElementById('voice-status-text').textContent = 'Bereit für "Hey Timer"';
         }, {once: true});
 
         document.getElementById('start-btn').onclick = startTimer;
