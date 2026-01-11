@@ -292,155 +292,114 @@
 
 
 
-    <script>
+<script>
+    // Logik für Tabs, Timer, Sprache etc.
+    const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
+    const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
+    timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
+    alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
 
-        // Logik für Tabs, Timer, Sprache etc.
+    // Modal Logik
+    const infoBtn = document.getElementById('info-btn'), infoModal = document.getElementById('info-modal'), closeInfo = document.getElementById('close-info-btn');
+    infoBtn.onclick = () => infoModal.classList.remove('hidden');
+    closeInfo.onclick = () => infoModal.classList.add('hidden');
 
-        const timerBtn = document.getElementById('tab-timer-btn'), alarmBtn = document.getElementById('tab-alarm-btn');
+    // Spracherkennung
+    let recognition = null, voiceActive = false, micEnabled = true;
+    const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), mBtn = document.getElementById('mic-toggle-btn');
 
-        const timerSec = document.getElementById('section-timer'), alarmSec = document.getElementById('section-alarm');
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition(); 
+        recognition.continuous = true; 
+        recognition.interimResults = false; // Nur finale Ergebnisse für bessere Stabilität
+        recognition.lang = 'de-DE';
 
-        timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
+        recognition.onresult = (e) => {
+            if (!micEnabled) return;
+            
+            // Hole den Text der letzten erkannten Phrase
+            const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
+            console.log("Erkannt:", t); // Debug-Hilfe in der Konsole
 
-        alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
-
-
-
-        // Modal Logik
-
-        const infoBtn = document.getElementById('info-btn'), infoModal = document.getElementById('info-modal'), closeInfo = document.getElementById('close-info-btn');
-
-        infoBtn.onclick = () => infoModal.classList.remove('hidden');
-
-        closeInfo.onclick = () => infoModal.classList.add('hidden');
-
-
-
-        // Spracherkennung
-
-        let recognition = null, voiceActive = false, micEnabled = true;
-
-        const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), mBtn = document.getElementById('mic-toggle-btn');
-
-
-
-        if ('webkitSpeechRecognition' in window) {
-
-            recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.lang = 'de-DE';
-
-            recognition.onresult = (e) => {
-
-                if (!micEnabled) return;
-
-                const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
-
-                if (!voiceActive && t.includes('hey timer')) { activateVoice(); }
-
-                else if (voiceActive) { procInt(t, 'voice'); deactivateVoice(); }
-
-            };
-
-            recognition.start();
-
-        }
-
-
-
-        function activateVoice() { 
-
-            voiceActive = true; 
-
-            vBox.classList.add('listening-active'); 
-
-            vText.textContent = 'Höre zu...'; 
-
-            const u = new SpeechSynthesisUtterance("Ja?"); u.lang = 'de-DE'; window.speechSynthesis.speak(u);
-
-        }
-
-        function deactivateVoice() { 
-
-            voiceActive = false; 
-
-            vBox.classList.remove('listening-active'); 
-
-            vText.textContent = micEnabled ? 'Sag "Hey Timer"' : 'Mikrofon aus'; 
-
-        }
-
-
-
-        vBox.onclick = () => voiceActive ? (deactivateVoice(), window.speechSynthesis.cancel()) : activateVoice();
-
-
-
-        mBtn.onclick = () => {
-
-            micEnabled = !micEnabled;
-
-            mBtn.classList.toggle('mic-muted', !micEnabled);
-
-            deactivateVoice();
-
-            if (!micEnabled) recognition.stop(); else recognition.start();
-
+            if (t.includes('hey timer')) { 
+                // Falls "Hey Timer" im Satz vorkommt, aktivieren wir
+                activateVoice(); 
+                
+                // Falls nach "Hey Timer" direkt ein Befehl im selben Satz steht:
+                const commandAfterWake = t.split('hey timer')[1].trim();
+                if (commandAfterWake.length > 0) {
+                    procInt(commandAfterWake, 'voice');
+                    deactivateVoice();
+                }
+            } else if (voiceActive) { 
+                // Wenn wir bereits im "Zuhören"-Modus sind
+                procInt(t, 'voice'); 
+                deactivateVoice(); 
+            }
         };
 
+        // Automatischer Restart, falls der Service stoppt
+        recognition.onend = () => { if (micEnabled) recognition.start(); };
+        recognition.start();
+    }
 
+    function activateVoice() { 
+        voiceActive = true; 
+        vBox.classList.add('listening-active'); 
+        vText.textContent = 'Höre zu...'; 
+        const u = new SpeechSynthesisUtterance("Ja?"); u.lang = 'de-DE'; window.speechSynthesis.speak(u);
+    }
+    function deactivateVoice() { 
+        voiceActive = false; 
+        vBox.classList.remove('listening-active'); 
+        vText.textContent = micEnabled ? 'Sag "Hey Timer"' : 'Mikrofon aus'; 
+    }
 
-        // Timer Logik (Kurzfassung)
+    vBox.onclick = () => voiceActive ? (deactivateVoice(), window.speechSynthesis.cancel()) : activateVoice();
 
-        let totalSeconds = 0, initialSeconds = 0, isRunning = false, endTime = 0;
+    mBtn.onclick = () => {
+        micEnabled = !micEnabled;
+        mBtn.classList.toggle('mic-muted', !micEnabled);
+        deactivateVoice();
+        if (!micEnabled) recognition.stop(); else recognition.start();
+    };
 
-        function startTimer() {
-
-            totalSeconds = (parseInt(document.getElementById('minutes-input').value) || 0) * 60;
-
-            initialSeconds = totalSeconds; isRunning = true; endTime = Date.now() + totalSeconds * 1000;
-
-        }
-
-        setInterval(() => {
-
-            if (isRunning) {
-
-                let s = Math.round((endTime - Date.now()) / 1000);
-
-                if (s <= 0) { isRunning = false; document.getElementById('time-display').textContent = "00:00"; }
-
-                else {
-
-                    let m = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0');
-
-                    document.getElementById('time-display').textContent = `${m}:${sec}`;
-
-                    document.getElementById('progress-ring').style.strokeDashoffset = 439.8 - ((s / initialSeconds) * 439.8);
-
-                }
-
+    // Timer Logik
+    let totalSeconds = 0, initialSeconds = 0, isRunning = false, endTime = 0;
+    function startTimer() {
+        const mins = parseInt(document.getElementById('minutes-input').value) || 0;
+        const secs = parseInt(document.getElementById('seconds-input').value) || 0;
+        totalSeconds = (mins * 60) + secs;
+        if (totalSeconds <= 0) return;
+        initialSeconds = totalSeconds; isRunning = true; endTime = Date.now() + totalSeconds * 1000;
+    }
+    setInterval(() => {
+        if (isRunning) {
+            let s = Math.round((endTime - Date.now()) / 1000);
+            if (s <= 0) { isRunning = false; document.getElementById('time-display').textContent = "00:00"; }
+            else {
+                let m = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0');
+                document.getElementById('time-display').textContent = `${m}:${sec}`;
+                document.getElementById('progress-ring').style.strokeDashoffset = 439.8 - ((s / initialSeconds) * 439.8);
             }
-
-            document.getElementById('current-clock').textContent = new Date().toTimeString().split(' ')[0];
-
-        }, 1000);
-
-
-
-        function procInt(c, m) {
-
-            if (c.includes('timer auf')) {
-
-                const n = c.match(/\d+/); if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); }
-
-            }
-
         }
+        document.getElementById('current-clock').textContent = new Date().toTimeString().split(' ')[0];
+    }, 1000);
 
-        document.getElementById('start-btn').onclick = startTimer;
-
-        document.getElementById('reset-btn').onclick = () => { isRunning = false; document.getElementById('progress-ring').style.strokeDashoffset = 0; };
-
-    </script>
+    function procInt(c, m) {
+        // Logik für "Timer auf X Minuten" oder nur "X Minuten"
+        if (c.includes('timer auf') || c.includes('minuten')) {
+            const n = c.match(/\d+/); 
+            if(n) { 
+                document.getElementById('minutes-input').value = n[0]; 
+                document.getElementById('seconds-input').value = 0;
+                startTimer(); 
+            }
+        }
+    }
+    document.getElementById('start-btn').onclick = startTimer;
+    document.getElementById('reset-btn').onclick = () => { isRunning = false; document.getElementById('progress-ring').style.strokeDashoffset = 0; document.getElementById('time-display').textContent = "05:00"; };
+</script>
 
 </body>
 
