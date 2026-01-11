@@ -152,39 +152,38 @@
         timerBtn.onclick = () => { timerSec.classList.remove('hidden'); alarmSec.classList.add('hidden'); timerBtn.classList.add('tab-active'); alarmBtn.classList.remove('tab-active'); };
         alarmBtn.onclick = () => { alarmSec.classList.remove('hidden'); timerSec.classList.add('hidden'); alarmBtn.classList.add('tab-active'); timerBtn.classList.remove('tab-active'); };
 
-        // Chat Minimier-Logik (RÜCKGÄNGIG GEMACHT)
-        document.getElementById('chat-header').onclick = () => {
-            const win = document.getElementById('chat-window');
-            win.classList.toggle('minimized');
-            document.getElementById('min-icon').textContent = win.classList.contains('minimized') ? '▲' : '▼';
-        };
-
         // Modal Logik
         const infoBtn = document.getElementById('info-btn'), infoModal = document.getElementById('info-modal'), closeInfo = document.getElementById('close-info-btn');
         infoBtn.onclick = () => infoModal.classList.remove('hidden');
         closeInfo.onclick = () => infoModal.classList.add('hidden');
 
-        // Spracherkennung FIX
+        // Spracherkennung
         let recognition = null, voiceActive = false, micEnabled = true;
         const vBox = document.getElementById('voice-status-box'), vText = document.getElementById('voice-status-text'), mBtn = document.getElementById('mic-toggle-btn');
 
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition(); 
             recognition.continuous = true; 
-            recognition.interimResults = false; 
+            recognition.interimResults = false;
             recognition.lang = 'de-DE';
 
             recognition.onresult = (e) => {
                 if (!micEnabled) return;
                 const t = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
                 
-                if (t.includes('hey timer')) { 
-                    activateVoice(); 
-                    // Falls direkt ein Befehl folgt
-                    const rest = t.split('hey timer')[1]?.trim();
-                    if (rest) { procInt(rest, 'voice'); deactivateVoice(); }
+                // Wake-Word Logik
+                if (t.includes('hey timer')) {
+                    activateVoice();
+                    // Prüfen ob direkt ein Befehl folgt
+                    const cmd = t.split('hey timer')[1].trim();
+                    if (cmd.length > 2) {
+                        procInt(cmd, 'voice');
+                        setTimeout(deactivateVoice, 1000);
+                    }
+                } else if (voiceActive) {
+                    procInt(t, 'voice');
+                    deactivateVoice();
                 }
-                else if (voiceActive) { procInt(t, 'voice'); deactivateVoice(); }
             };
 
             recognition.onend = () => { if (micEnabled) recognition.start(); };
@@ -215,30 +214,64 @@
         // Timer Logik
         let totalSeconds = 0, initialSeconds = 0, isRunning = false, endTime = 0;
         function startTimer() {
-            totalSeconds = (parseInt(document.getElementById('minutes-input').value) || 0) * 60;
-            initialSeconds = totalSeconds; isRunning = true; endTime = Date.now() + totalSeconds * 1000;
+            const mInput = parseInt(document.getElementById('minutes-input').value) || 0;
+            const sInput = parseInt(document.getElementById('seconds-input').value) || 0;
+            totalSeconds = (mInput * 60) + sInput;
+            if (totalSeconds <= 0) return;
+            initialSeconds = totalSeconds; 
+            isRunning = true; 
+            endTime = Date.now() + totalSeconds * 1000;
         }
+
         setInterval(() => {
             if (isRunning) {
                 let s = Math.round((endTime - Date.now()) / 1000);
-                if (s <= 0) { isRunning = false; document.getElementById('time-display').textContent = "00:00"; }
-                else {
+                if (s <= 0) { 
+                    isRunning = false; 
+                    document.getElementById('time-display').textContent = "00:00";
+                    document.getElementById('progress-ring').style.strokeDashoffset = 439.8;
+                    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+                } else {
                     let m = Math.floor(s / 60).toString().padStart(2, '0'), sec = (s % 60).toString().padStart(2, '0');
                     document.getElementById('time-display').textContent = `${m}:${sec}`;
                     document.getElementById('progress-ring').style.strokeDashoffset = 439.8 - ((s / initialSeconds) * 439.8);
                 }
             }
-            document.getElementById('current-clock').textContent = new Date().toTimeString().split(' ')[0];
+            document.getElementById('current-clock').textContent = new Date().toLocaleTimeString('de-DE');
         }, 1000);
 
-        function procInt(c, m) {
-            if (c.includes('timer auf') || c.includes('minuten')) {
+        function procInt(c, source) {
+            const history = document.getElementById('chat-history');
+            const entry = document.createElement('div');
+            entry.className = "bg-white/5 p-2 rounded";
+            entry.textContent = `> ${c}`;
+            history.appendChild(entry);
+            history.scrollTop = history.scrollHeight;
+
+            if (c.includes('timer') || c.includes('minuten')) {
                 const n = c.match(/\d+/); 
-                if(n) { document.getElementById('minutes-input').value = n[0]; startTimer(); }
+                if(n) { 
+                    document.getElementById('minutes-input').value = n[0]; 
+                    document.getElementById('seconds-input').value = 0;
+                    startTimer(); 
+                }
             }
         }
+
         document.getElementById('start-btn').onclick = startTimer;
-        document.getElementById('reset-btn').onclick = () => { isRunning = false; document.getElementById('progress-ring').style.strokeDashoffset = 0; };
+        document.getElementById('reset-btn').onclick = () => { 
+            isRunning = false; 
+            document.getElementById('progress-ring').style.strokeDashoffset = 0; 
+            document.getElementById('time-display').textContent = "05:00";
+        };
+
+        // Chat Input Logik
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                procInt(e.target.value, 'chat');
+                e.target.value = '';
+            }
+        });
     </script>
 </body>
 </html>
